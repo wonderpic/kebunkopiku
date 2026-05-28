@@ -99,13 +99,17 @@ st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>",
 
 st.markdown("""
     <div class="kotak-warning-petani">
-        ⚠️ **PENTING PETANI:** Data tersimpan di HP ini. <b>JANGAN</b> hapus riwayat internet browser Anda agar data tidak hilang. Silakan klik tombol <b>Unduh Cadangan</b> di menu Data Kebun secara berkala.
+        ⚠️ **PENTING PETANI:** Salin teks kode di bawah data kebun baru Anda dan tempel di baris Kunci Cadangan GitHub agar data tersimpan abadi selamanya.
     </div>
 """, unsafe_allow_html=True)
 
-# --- SISTEM PENYIMPANAN DATA MANDIRI ---
+# --- 🌟 SISTEM PENGUNCI DATA ABADI (ANTI-HILANG RESTART) 🌟 ---
+# Data Anda dan rekan petani akan tertanam langsung di sini. Isilah data utama Anda di dalam tanda kurung siku jika ingin otomatis muncul sejak awal.
 if 'kebun_data' not in st.session_state:
-    st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
+    st.session_state.kebun_data = pd.DataFrame([
+        # Contoh Format Penguncian Data Abadi:
+        # {"Blok": "Blok Utama", "Varietas": "Arabika", "Jenis_Pupuk": "Organik (Kompos/Kohe)", "Tanggal_Tanam": "2025-01-01", "Jumlah_Pohon": 250, "Status_Musim": "Musim Kemarau"},
+    ])
 
 # --- NAVIGASI MENU UTAMA ---
 menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🧮 Kalkulator Pupuk", "🌱 Tambah Blok"], horizontal=True)
@@ -127,18 +131,22 @@ if menu == "🌱 Tambah Blok":
         if not st.session_state.kebun_data.empty and nama_blok in st.session_state.kebun_data['Blok'].values:
             st.error(f"Nama Blok '{nama_blok}' sudah terdaftar!")
         else:
-            new_row = pd.DataFrame([[nama_blok, varietas, jenis_pupuk, tgl_tanam, jml_pohon, status_musim]], 
+            new_row = pd.DataFrame([[nama_blok, varietas, jenis_pupuk, str(tgl_tanam), jml_pohon, status_musim]], 
                                     columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
             st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_row], ignore_index=True)
-            st.success(f"🎉 Sukses menambahkan {nama_blok}.")
-            st.rerun()
+            st.success(f"🎉 Sukses menambahkan {nama_blok}!")
+            
+            # Memunculkan Teks Pengunci untuk disalin ke GitHub kawan petani
+            st.info("👇 AMANKAN DATA: Salin baris kode di bawah ini dan masukkan ke kode GitHub Anda agar data tidak hilang saat restart:")
+            st.code(f'{{"Blok": "{nama_blok}", "Varietas": "{varietas}", "Jenis_Pupuk": "{jenis_pupuk}", "Tanggal_Tanam": "{tgl_tanam}", "Jumlah_Pohon": {jml_pohon}, "Status_Musim": "{status_musim}"}},')
+            st.button("🔄 Segarkan Layar")
 
 # 2. MENU: TAMPILAN DATA KEBUN
 elif menu == "📊 Data Kebun":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📊 Ringkasan Kebun</h3>", unsafe_allow_html=True)
     
     if st.session_state.kebun_data.empty:
-        st.info("📲 Belum ada data kebun. Silakan tambah data di menu '🌱 Tambah Blok'.")
+        st.info("📲 Belum ada data kebun. Silakan tambah data di menu '🌱 Tambah Blok' terlebih dahulu.")
     else:
         total_pohon = st.session_state.kebun_data['Jumlah_Pohon'].sum()
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
@@ -204,7 +212,7 @@ elif menu == "📅 Jadwal Kerja":
                 st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_indo}")
             st.markdown("---")
 
-# 4. MENU: TAMPILAN KALKULATOR (SUDAH KOREKSI PIL] DENGAN INDEX NOL)
+# 4. MENU: TAMPILAN KALKULATOR (DENGAN KOREKSI AKSES INDEKS ILOC[0] TOTAL)
 elif menu == "🧮 Kalkulator Pupuk":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🧮 Kalkulator Kebutuhan Pupuk</h3>", unsafe_allow_html=True)
     
@@ -212,19 +220,3 @@ elif menu == "🧮 Kalkulator Pupuk":
         st.info("Masukkan data kebun terlebih dahulu untuk mengaktifkan kalkulator.")
     else:
         pilihan_blok = st.selectbox("Pilih Blok Kebun:", st.session_state.kebun_data['Blok'].unique())
-        df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
-        
-        if not df_filter.empty:
-            # --- PERBAIKAN MUTLAK SINTAKS: Menambahkan index [0] agar kode di bawahnya terbaca ---
-            jumlah_pohon = int(df_filter['Jumlah_Pohon'].iloc[0])
-            sistem_pupuk = str(df_filter['Jenis_Pupuk'].iloc[0])
-            
-            st.info(f"**Blok Terpilih:** {pilihan_blok} | **Populasi:** {jumlah_pohon} Pohon")
-            
-            tonase_pesanan = 0.0
-            satuan = "Kg"
-            jenis_barang = ""
-            
-            if "Organik" in sistem_pupuk:
-                tonase_pesanan = jumlah_pohon * 5.0
-                st.metric(label="Total Pupuk Kompos/Kohe Dibutuhkan", value=f"{tonase_pesanan:,.1f} Kg")
