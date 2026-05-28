@@ -2,80 +2,76 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 
-# Konfigurasi Halaman
-st.set_page_config(page_title="KopiPlan - Jadwal Kebun Kopi", layout="wide")
-st.title("☕ KopiPlan: Sistem Penjadwalan Kebun Kopi")
+# Konfigurasi Halaman agar Pas di Layar HP
+st.set_page_config(page_title="KopiPlan Mobile", layout="centered")
+
+st.title("☕ KopiPlan Mobile")
+st.caption("Asisten Penjadwalan Kebun Kopi Anda")
 
 # Inisialisasi Data State (Simulasi Database)
 if 'kebun_data' not in st.session_state:
     st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Tanggal Tanam', 'Jumlah Pohon'])
 
-# --- SIDEBAR: INPUT DATA KEBUN ---
-st.sidebar.header("🌱 Tambah Blok Kebun Baru")
-with st.sidebar.form("form_kebun"):
-    nama_blok = st.text_input("Nama Blok (Contoh: Blok A / Lereng Utara)")
-    varietas = st.selectbox("Varietas Kopi", ["Arabika", "Robusta", "Liberika"])
-    tgl_tanam = st.date_input("Tanggal Tanam", datetime.now())
-    jml_pohon = st.number_input("Jumlah Pohon", min_value=1, value=100)
-    submit_button = st.form_submit_button(label="Simpan Data")
+# --- MENU NAVIGASI BAWAH (Cocok untuk HP) ---
+menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "➕ Tambah Blok"], horizontal=True)
 
-if submit_button and nama_blok:
-    new_data = pd.DataFrame([[nama_blok, varietas, tgl_tanam, jml_pohon]], 
-                            columns=['Blok', 'Varietas', 'Tanggal Tanam', 'Jumlah Pohon'])
-    st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_data], ignore_index=True)
-    st.sidebar.success(f"Blok {nama_blok} berhasil ditambahkan!")
+# --- MENU: TAMBAH BLOK ---
+if menu == "➕ Tambah Blok":
+    st.subheader("🌱 Tambah Blok Kebun")
+    with st.form("form_kebun"):
+        nama_blok = st.text_input("Nama Blok", placeholder="Contoh: Blok A / Lereng")
+        varietas = st.selectbox("Varietas Kopi", ["Arabika", "Robusta", "Liberika"])
+        tgl_tanam = st.date_input("Tanggal Tanam", datetime.now())
+        jml_pohon = st.number_input("Jumlah Pohon", min_value=1, value=100)
+        submit_button = st.form_submit_button(label="⚡ Simpan Blok")
 
-# --- HALAMAN UTAMA ---
-if st.session_state.kebun_data.empty:
-    st.info("Silakan tambah data blok kebun Anda di sidebar terlebih dahulu.")
-else:
-    # Tab Menu
-    tab1, tab2 = st.tabs(["📊 Dashboard & Data Kebun", "📅 Jadwal Pemeliharaan"])
+    if submit_button and nama_blok:
+        new_data = pd.DataFrame([[nama_blok, varietas, tgl_tanam, jml_pohon]], 
+                                columns=['Blok', 'Varietas', 'Tanggal Tanam', 'Jumlah Pohon'])
+        st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_data], ignore_index=True)
+        st.success(f"Blok {nama_blok} berhasil disimpan!")
 
-    with tab1:
-        st.subheader("Data Blok Kebun Saat Ini")
-        st.dataframe(st.session_state.kebun_data, use_container_width=True)
-        
-        # Metrik Singkat
+# --- MENU: DATA KEBUN ---
+elif menu == "📊 Data Kebun":
+    st.subheader("Ringkasan Kebun")
+    if st.session_state.kebun_data.empty:
+        st.info("Belum ada data. Pilih menu '➕ Tambah Blok' terlebih dahulu.")
+    else:
+        # Metrik Besar untuk Layar HP
         total_pohon = st.session_state.kebun_data['Jumlah Pohon'].sum()
-        st.metric(label="Total Pohon Kopi Dikelola", value=f"{total_pohon} Pohon")
+        st.metric(label="Total Pohon Dikelola", value=f"{total_pohon} Batang")
+        
+        st.write("---")
+        # Menampilkan data dalam bentuk kartu, bukan tabel lebar
+        for index, row in st.session_state.kebun_data.iterrows():
+            with st.container():
+                st.markdown(f"### 📍 {row['Blok']}")
+                st.markdown(f"**Jenis:** {row['Varietas']} | **Populasi:** {row['Jumlah Pohon']} Pohon")
+                st.markdown(f"📅 **Tanam:** {row['Tanggal Tanam']}")
+                st.write("---")
 
-    with tab2:
-        st.subheader("Jadwal Aktivitas Kebun Otomatis")
-        st.write("Jadwal di bawah ini dibuat otomatis berdasarkan tanggal tanam:")
-
-        jadwal_list = []
+# --- MENU: JADWAL KERJA ---
+elif menu == "📅 Jadwal Kerja":
+    st.subheader("Aktivitas yang Harus Dilakukan")
+    if st.session_state.kebun_data.empty:
+        st.info("Belum ada jadwal. Tambahkan data blok kebun terlebih dahulu.")
+    else:
         for index, row in st.session_state.kebun_data.iterrows():
             tgl = pd.to_datetime(row['Tanggal Tanam'])
             
-            # Logika Aturan Jadwal Budidaya Kopi Singkat
-            jadwal_list.append({
-                "Blok": row['Blok'],
-                "Aktivitas": "Pemupukan Organik Awal",
-                "Tanggal Target": (tgl + timedelta(days=30)).strftime('%Y-%m-%d'),
-                "Status": "Rencana"
-            })
-            jadwal_list.append({
-                "Blok": row['Blok'],
-                "Aktivitas": "Pemangkasan Wiwilan (Tunas Air)",
-                "Tanggal Target": (tgl + timedelta(days=90)).strftime('%Y-%m-%d'),
-                "Status": "Rencana"
-            })
-            jadwal_list.append({
-                "Blok": row['Blok'],
-                "Aktivitas": "Pemupukan Kimia (NPK) Tahap 1",
-                "Tanggal Target": (tgl + timedelta(days=180)).strftime('%Y-%m-%d'),
-                "Status": "Rencana"
-            })
-            jadwal_list.append({
-                "Blok": row['Blok'],
-                "Aktivitas": "Estimasi Panen Perdana (Belajar Berbuah)",
-                "Tanggal Target": (tgl + timedelta(days=730)).strftime('%Y-%m-%d'),
-                "Status": "Rencana"
-            })
-
-        df_jadwal = pd.DataFrame(jadwal_list)
-        st.dataframe(df_jadwal, use_container_width=True)
-
-        # Fitur Cetak / Selesai sederhana
-        st.caption("💡 Tip: Lakukan pemeliharaan rutin secara berkala sesuai tanggal target untuk hasil ceri kopi yang optimal.")
+            st.markdown(f"#### 🪵 Target Kerja: {row['Blok']}")
+            
+            # Daftar Tugas berbentuk list vertikal yang mudah dibaca di HP
+            tugas = [
+                ("🌿 Pemupukan Organik", tgl + timedelta(days=30)),
+                ("✂️ Pangkas Tunas Air", tgl + timedelta(days=90)),
+                ("🧪 Pupuk NPK Tahap 1", tgl + timedelta(days=180)),
+                ("🍒 Estimasi Panen", tgl + timedelta(days=730))
+            ]
+            
+            for nama_tugas, tgl_target in tugas:
+                tgl_indo = tgl_target.strftime('%d %b %Y')
+                # Menggunakan status sukses jika sudah lewat atau info untuk rencana
+                st.info(f"**{nama_tugas}** \n\n Target: {tgl_indo}")
+            
+            st.write("---")
