@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
-import os
+import json
 import base64
+import os
 from datetime import datetime, timedelta
 
 # Konfigurasi Tampilan Utama Halaman HP
@@ -39,22 +40,39 @@ if os.path.exists(NAMA_LOGO):
         html_logo = konversi_gambar_ke_html(NAMA_LOGO)
         st.markdown(html_logo, unsafe_allow_html=True)
     except:
-        st.markdown("<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ Memuat Logo... ]</p>", unsafe_allow_html=True)
+        pass
 
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
 
 st.markdown("""
     <div class="kotak-warning-petani">
-        ⚠️ **PENTING UNTUK PETANI:** Data kebun tersimpan aman di memori internet HP Anda. <b>JANGAN</b> hapus riwayat internet (Cache/Cookies) HP Anda agar data tidak hilang secara otomatis.
+        ⚠️ **PENTING UNTUK PETANI:** Data kebun Anda dikunci langsung pada link browser HP Anda agar tidak hilang saat di-refresh. 
     </div>
 """, unsafe_allow_html=True)
 
-# --- SISTEM PENYIMPANAN DATA MANDIRI LOKAL ---
-if 'kebun_data' not in st.session_state:
-    st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Lokasi', 'Ketinggian', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
+# --- 🌟 JEMBATAN KUNCI LINK BRIDGING (ANTI-HILANG REFRESH) 🌟 ---
+query_params = st.query_params
 
-# --- NAVIGASI MENU UTAMA (3 MENU STABIL) ---
+if 'kebun_data' not in st.session_state:
+    if 'kebun_backup' in query_params:
+        try:
+            # Memulihkan data otomatis dari enkripsi link browser saat direfresh
+            raw_json = base64.b64decode(query_params['kebun_backup']).decode('utf-8')
+            st.session_state.kebun_data = pd.DataFrame(json.loads(raw_json))
+        except:
+            st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Lokasi', 'Ketinggian', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
+    else:
+        st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Lokasi', 'Ketinggian', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
+
+# Fungsi otomatis menyelipkan data ke link browser HP
+def kunci_data_ke_link():
+    if not st.session_state.kebun_data.empty:
+        json_str = st.session_state.kebun_data.to_json(orient='records')
+        b64_str = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
+        st.query_params['kebun_backup'] = b64_str
+
+# --- NAVIGASI MENU UTAMA ---
 menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🌱 Tambah Blok"], horizontal=True)
 st.write("---")
 
@@ -63,11 +81,8 @@ if menu == "🌱 Tambah Blok":
     st.markdown("<h3 style='color: #1e3f20;'>🌱 Tambah Blok Kebun Baru</h3>", unsafe_allow_html=True)
     with st.form("form_kebun_baru"):
         nama_blok = st.text_input("Nama Blok Baru", placeholder="Contoh: Blok A")
-        
-        # --- FITUR BARU: HANYA MENAMBAH KOORDINAT KETINGGIAN & KOTA ---
         lokasi_kebun = st.text_input("Lokasi Kebun (Kabupaten/Kota)", placeholder="Contoh: Garut / Temanggung")
-        ketinggian_lahan = st.number_input("Ketinggian Lahan Kebun (mdpl)", min_value=0, max_value=3000, value=800, help="Meter di atas permukaan laut")
-        
+        ketinggian_lahan = st.number_input("Ketinggian Lahan Kebun (mdpl)", min_value=0, max_value=3000, value=800)
         varietas = st.selectbox("Varietas Kopi", ["Arabika", "Robusta"])
         jenis_pupuk = st.selectbox("Metode Pemupukan Utama", ["Organik (Kompos/Kohe)", "Non-Organik (Kimia/NPK)"])
         status_musim = st.selectbox("Kondisi Cuaca Saat Ini", ["Musim Kemarau", "Musim Hujan"])
@@ -77,12 +92,13 @@ if menu == "🌱 Tambah Blok":
 
     if submit_button and nama_blok:
         if not st.session_state.kebun_data.empty and nama_blok in st.session_state.kebun_data['Blok'].values:
-            st.error(f"Nama Blok '{nama_blok}' sudah terdaftar! Gunakan nama lain.")
+            st.error(f"Nama Blok '{nama_blok}' sudah terdaftar!")
         else:
-            new_row = pd.DataFrame([[nama_blok, lokasi_kebun, ketinggian_lahan, varietas, jenis_pupuk, tgl_tanam, jml_pohon, status_musim]], 
+            new_row = pd.DataFrame([[nama_blok, lokasi_kebun, ketinggian_lahan, varietas, jenis_pupuk, str(tgl_tanam), jml_pohon, status_musim]], 
                                     columns=['Blok', 'Lokasi', 'Ketinggian', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
             st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_row], ignore_index=True)
-            st.success(f"🎉 Sukses! {nama_blok} berhasil ditambahkan ke sistem.")
+            kunci_data_ke_link() # Kunci ke link internet
+            st.success(f"🎉 Sukses! {nama_blok} berhasil disimpan.")
             st.rerun()
 
 # 2. MENU: TAMPILAN DATA KEBUN
@@ -90,7 +106,7 @@ elif menu == "📊 Data Kebun":
     st.markdown("<h3 style='color: #1e3f20;'>📊 Ringkasan Kebun</h3>", unsafe_allow_html=True)
     
     if st.session_state.kebun_data.empty:
-        st.info("📲 Belum ada data kebun Anda. Silakan masuk ke menu '🌱 Tambah Blok' untuk mulai mencatatkan kebun Anda.")
+        st.info("📲 Belum ada data kebun Anda. Silakan isi data baru di menu '🌱 Tambah Blok'.")
     else:
         total_pohon = st.session_state.kebun_data['Jumlah_Pohon'].sum()
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
@@ -109,10 +125,12 @@ elif menu == "📊 Data Kebun":
             
             if st.button(f"🗑️ Hapus {row['Blok']}", key=f"hapus_{row['Blok']}_{idx}"):
                 st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
-                st.success(f"Blok {row['Blok']} telah berhasil dihapus!")
+                kunci_data_ke_link()
+                if st.session_state.kebun_data.empty:
+                    st.query_params.clear()
                 st.rerun()
 
-# 3. MENU: TAMPILAN JADWAL (TIDAK MENGUBAH JADWAL LAMA, HANYA MENYISIPKAN TIPS SMART ALERT)
+# 3. MENU: TAMPILAN JADWAL
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
@@ -128,15 +146,13 @@ elif menu == "📅 Jadwal Kerja":
             
             st.markdown(f"#### 📍 Blok Kerja: **{blok_id}** ({row['Lokasi']} - {h_mdpl} mdpl)")
             
-            # --- FITUR SMART ALERT: KOTAK REKOMENDASI PINTAR (TIDAK MENGUBAH ATURAN LAMA) ---
             if var_kopi == "Arabika" and h_mdpl < 1000:
-                st.warning(f"⚠️ **REKOMENDASI ALAM:** Kopi Arabika ditanam di {h_mdpl} mdpl (Terlalu Rendah). Pohon akan rentan terserang karat daun. Perketat pengawasan jamur daun pada jadwal inspeksi rutin!")
+                st.warning(f"⚠️ **REKOMENDASI ALAM:** Kopi Arabika ditanam di {h_mdpl} mdpl (Terlalu Rendah). Rentan karat daun!")
             elif var_kopi == "Robusta" and h_mdpl > 900:
-                st.warning(f"⚠️ **REKOMENDASI ALAM:** Kopi Robusta ditanam di {h_mdpl} mdpl (Terlalu Tinggi). Pertumbuhan ceri mungkin akan melambat akibat suhu dingin dataran tinggi.")
+                st.warning(f"⚠️ **REKOMENDASI ALAM:** Kopi Robusta ditanam di {h_mdpl} mdpl (Terlalu Tinggi).")
             else:
-                st.success(f"✅ **KONDISI IDEAL:** Ketinggian lahan {h_mdpl} mdpl sangat cocok untuk pertumbuhan varietas Kopi {var_kopi}!")
+                st.success(f"✅ **KONDISI IDEAL:** Ketinggian lahan {h_mdpl} mdpl cocok untuk varietas Kopi {var_kopi}!")
                 
-            # JADWAL LAMA KITA TETAP UTUH & TETAP BERJALAN NORMAL
             tugas_list = []
             if "Organik" in row['Jenis_Pupuk']:
                 tugas_list += [("🟫 Aplikasi Pupuk Dasar (Kompos)", 14), ("🟫 Pemupukan Organik Tahap 1", 120)]
@@ -154,9 +170,5 @@ elif menu == "📅 Jadwal Kerja":
                 tugas_list += [("🌧️ Cek Saluran Drainase Kebun", 5), ("🌧️ Pembersihan Gulma Hujan", 15)]
                 
             tugas_list.sort(key=lambda x: x)
-            
             for nama_tugas, jeda_hari in tugas_list:
                 tgl_target = tgl + timedelta(days=jeda_hari)
-                tgl_indo = tgl_target.strftime('%d %b %Y')
-                st.error(f"⚠️ **TUGAS HARUS DILAKUKAN**\n\n**{nama_tugas}**\n\n📆 Target: {tgl_indo}")
-            st.markdown("---")
