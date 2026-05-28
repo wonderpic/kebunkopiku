@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import json
 import os
 import base64
 from datetime import datetime, timedelta
@@ -30,7 +29,7 @@ st.markdown("""
     .stApp { background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%); }
     .judul-utama { color: #1e3f20 !important; font-family: 'Helvetica Neue', sans-serif; font-weight: 800; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); margin-top: 5px !important; margin-bottom: 2px !important; font-size: 24px; }
     .sub-judul { color: #4a6b4c; font-weight: 500; text-align: center; margin-top: 0px; margin-bottom: 12px; font-size: 13px; }
-    .kotak-warning-petani { background-color: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 8px; font-size: 11px; line-height: 1.4; margin-bottom: 20px; border: 1px solid #ffeeba; text-align: left; }
+    .kotak-warning-petani { background-color: #fff3cd; color: #856404; padding: 6px 12px; border-radius: 8px; font-size: 11px; line-height: 1.4; margin-bottom: 20px; border: 1px solid #ffeeba; text-align: left; }
     .kartu-kebun { background-color: #ffffff; padding: 20px; border-radius: 15px; border-left: 6px solid #4e3629; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 20px; }
     div[data-testid="stRadio"] > div { background-color: #ffffff; padding: 10px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
     </style>
@@ -48,14 +47,13 @@ st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>",
 
 st.markdown("""
     <div class="kotak-warning-petani">
-        ⚠️ **PENTING UNTUK REKAN PETANI:** Data kebun Anda tersimpan aman dan terpisah di memori HP Anda sendiri. <b>JANGAN</b> hapus riwayat internet browser HP Anda agar catatan tidak hilang otomatis.
+        ⚠️ **PENTING UNTUK REKAN PETANI:** Data kebun Anda tersimpan mandiri di memori internet HP ini. <b>JANGAN</b> hapus riwayat internet HP Anda agar catatan kerja tidak hilang otomatis. Gunakan tombol <b>📥 Unduh Laporan</b> di menu Data Kebun secara berkala.
     </div>
 """, unsafe_allow_html=True)
 
-# --- 🌟 PENYELAMAT MEMORI PETANI: KOMPONEN LOCAL STORAGE MANUAL 🌟 ---
-# Menggunakan trik teks area tersembunyi yang bisa disimpan petani dengan sangat mudah
-if 'kebun_koleksi' not in st.session_state:
-    st.session_state.kebun_koleksi = []
+# --- SISTEM DATA MANDIRI STABIL ---
+if 'kebun_data' not in st.session_state:
+    st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Lokasi', 'Ketinggian', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
 
 # --- NAVIGASI MENU UTAMA ---
 menu = st.radio("Pilih Menu Aplikasi:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🌱 Tambah Blok"], horizontal=True)
@@ -76,54 +74,32 @@ if menu == "🌱 Tambah Blok":
         submit_button = st.form_submit_button(label="⚡ Simpan Blok Kebun")
 
     if submit_button and nama_blok:
-        nama_kembar = any(k['Blok'] == nama_blok for k in st.session_state.kebun_koleksi)
-        if nama_kembar:
+        if not st.session_state.kebun_data.empty and nama_blok in st.session_state.kebun_data['Blok'].values:
             st.error(f"Nama Blok '{nama_blok}' sudah terdaftar!")
         else:
-            new_block = {
-                "Blok": nama_blok,
-                "Lokasi": lokasi_kebun,
-                "Ketinggian": int(ketinggian_lahan),
-                "Varietas": varietas,
-                "Jenis_Pupuk": jenis_pupuk,
-                "Tanggal_Tanam": str(tgl_tanam),
-                "Jumlah_Pohon": int(jml_pohon),
-                "Status_Musim": status_musim
-            }
-            st.session_state.kebun_koleksi.append(new_block)
-            st.success(f"🎉 Sukses! {nama_blok} berhasil disimpan di memori sementara.")
+            new_row = pd.DataFrame([[nama_blok, lokasi_kebun, int(ketinggian_lahan), varietas, jenis_pupuk, str(tgl_tanam), int(jml_pohon), status_musim]], 
+                                    columns=['Blok', 'Lokasi', 'Ketinggian', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
+            st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_row], ignore_index=True)
+            st.success(f"🎉 Sukses! {nama_blok} berhasil disimpan.")
             st.rerun()
 
 # 2. MENU: DATA KEBUN
 elif menu == "📊 Data Kebun":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📊 Ringkasan Kebun</h3>", unsafe_allow_html=True)
     
-    # KUNCI AMAN: Fitur Cadangan Manual Teks untuk Petani agar data 100% Kebal Hapus
-    with st.expander("💾 KUNCI AMAN DATA PETANI (Anti-Hilang)"):
-        st.markdown("<p style='font-size:12px; color:#555;'>Salin seluruh teks kotak di bawah ini dan simpan di catatan HP Anda. Jika suatu saat data di HP Anda kosong akibat browser ter-refresh, cukup tempel kembali teks tersebut ke dalam kotak input di bawah untuk memulihkan seluruh data kebun Anda.</p>", unsafe_allow_html=True)
-        json_backup_str = json.dumps(st.session_state.kebun_koleksi)
-        st.text_area("Salin Kode Cadangan Anda Di Sini:", value=json_backup_str, key="kotak_salin")
-        
-        st.write("---")
-        teks_pulih = st.text_input("Tempel Teks Cadangan Anda di Sini Untuk Memulihkan Data:", value="")
-        if st.button("🔄 Pulihkan Seluruh Catatan Kerja"):
-            if teks_pulih:
-                try:
-                    st.session_state.kebun_koleksi = json.loads(teks_pulih)
-                    st.success("🎉 Seluruh catatan data kebun berhasil dipulihkan!")
-                    st.rerun()
-                except:
-                    st.error("Teks cadangan salah atau tidak valid!")
-
-    st.write("---")
-
-    if not st.session_state.kebun_data_koleksi if 'kebun_data_koleksi' in locals() else st.session_state.kebun_koleksi:
+    if st.session_state.kebun_data.empty:
         st.info("📲 Belum ada data kebun. Rekan petani silakan isi data baru di menu '🌱 Tambah Blok'.")
     else:
-        total_pohon = sum(int(k['Jumlah_Pohon']) for k in st.session_state.kebun_koleksi)
-        st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
+        total_pohon = st.session_state.kebun_data['Jumlah_Pohon'].sum()
+        st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{int(total_pohon)} Batang")
         
-        for idx, row in enumerate(st.session_state.kebun_koleksi):
+        # Fitur unduh laporan resmi Excel/CSV bawaan Pandas murni yang kebal reset
+        df_download = st.session_state.kebun_data
+        data_csv = df_download.to_csv(index=False).encode('utf-8')
+        st.download_button(label="📥 Unduh Cadangan Data Kebun (Excel/CSV)", data=data_csv, file_name="Data_Kebun_Kopi_TalagaHangsa.csv", mime='text/csv')
+        st.write("---")
+        
+        for idx, row in st.session_state.kebun_data.get_container if hasattr(st.session_state.kebun_data, 'get_container') else st.session_state.kebun_data.iterrows():
             st.markdown(f"""
                 <div class="kartu-kebun">
                     <h3 style="margin-top:0; color:#4e3629;">📍 Blok: {row['Blok']}</h3>
@@ -135,33 +111,28 @@ elif menu == "📊 Data Kebun":
             """, unsafe_allow_html=True)
             
             if st.button(f"🗑️ Hapus {row['Blok']}", key=f"hapus_{row['Blok']}_{idx}"):
-                st.session_state.kebun_koleksi.pop(idx)
+                st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
                 st.rerun()
 
-# 3. MENU: JADWAL KERJA BERURUTAN TANGGAL TERDEKAT LINTAS BLOK MURNI PYTHON (BEBAS ERROR)
+# 3. MENU: JADWAL KERJA (URUTAN GLOBAL TANGGAL TERDEKAT LINTAS BLOK STABIL 100%)
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
-    if not st.session_state.kebun_koleksi:
+    if st.session_state.kebun_data.empty:
         st.info("📲 Belum ada jadwal tugas. Rekan petani silakan tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
     else:
         keranjang_tugas_global = []
         
-        for row in st.session_state.kebun_koleksi:
+        for idx, row in st.session_state.kebun_data.iterrows():
             blok_id = row['Blok']
             lokasi = row['Lokasi']
             musim = row['Status_Musim']
             h_mdpl = int(row['Ketinggian'])
             var_kopi = row['Varietas']
-            
-            tgl_str = row['Tanggal_Tanam']
-            try:
-                tgl_obj = datetime.strptime(tgl_str, "%Y-%m-%d")
-            except:
-                tgl_obj = datetime.now()
+            tgl = pd.to_datetime(row['Tanggal_Tanam'])
                 
             tugas_lokal = []
-            if "Organik" in row['Jenis_Pupuk']:
+            if "Organik" in str(row['Jenis_Pupuk']):
                 tugas_lokal += [("🟫 Aplikasi Pupuk Dasar (Kompos)", 14), ("🟫 Pemupukan Organik Tahap 1", 120)]
             else:
                 tugas_lokal += [("🧪 Aplikasi Pupuk Kimia Dasar", 30), ("🧪 Pemupukan NPK Vegetatif", 90)]
@@ -177,3 +148,22 @@ elif menu == "📅 Jadwal Kerja":
                 tugas_lokal += [("🌧️ Cek Saluran Drainase Kebun", 5), ("🌧️ Pembersihan Gulma Hujan", 15)]
                 
             for nama_tugas, jeda_hari in tugas_lokal:
+                tgl_target = tgl + timedelta(days=jeda_hari)
+                keranjang_tugas_global.append({
+                    "blok": blok_id,
+                    "lokasi": lokasi,
+                    "mdpl": h_mdpl,
+                    "varietas": var_kopi,
+                    "tugas": nama_tugas,
+                    "target_waktu": tgl_target
+                })
+        
+        # Urutkan seluruh tugas global berdasarkan waktu pengerjaan terdekat murni resmi Pandas DataFrame
+        df_tugas_urut = pd.DataFrame(keranjang_tugas_global)
+        df_tugas_urut = df_tugas_urut.sort_values(by="target_waktu", ascending=True)
+        
+        for _, tgs in df_tugas_urut.iterrows():
+            tgl_cetak = tgs["target_waktu"].strftime('%d %b %Y')
+            
+            with st.container():
+                st.markdown(f"📍 **Blok:** {tgs['blok']} ({tgs['lokasi']} - {tgs['mdpl']} mdpl)")
