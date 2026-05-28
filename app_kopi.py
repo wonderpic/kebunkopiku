@@ -7,27 +7,23 @@ from datetime import datetime, timedelta
 # Konfigurasi Tampilan Utama Halaman HP
 st.set_page_config(page_title="Talaga Hangsa KopiPlanPro", layout="centered")
 
-# --- SISTEM PROSES GAMBAR BASE64 (MENGUNCI KETAJAMAN & CENTER MUTLAK) ---
+# --- SISTEM PROSES GAMBAR BASE64 ---
 def konversi_gambar_ke_html(jalur_gambar):
     with open(jalur_gambar, "rb") as file_gambar:
         data_binner = file_gambar.read()
         format_base64 = base64.b64encode(data_binner).decode()
-    # HTML murni untuk mengunci pixel agar jernih tajam (anti-alias / crisp-edges)
     return f"""
     <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: -10px;">
         <img src="data:image/png;base64,{format_base64}" style="width: 140px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;">
     </div>
     """
 
-# --- KODE DESAIN TEMA LUXURY (KUSTOMISASI WARNA & BACKGROUND) ---
+# --- KODE DESAIN TEMA LUXURY ---
 st.markdown("""
     <style>
-    /* Latar Belakang Aplikasi Bernuansa Alam */
     .stApp {
         background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%);
     }
-    
-    /* Mengubah Warna Teks Judul Utama (Center Mutlak di Bawah Logo) */
     .judul-utama {
         color: #1e3f20 !important;
         font-family: 'Helvetica Neue', sans-serif;
@@ -38,7 +34,6 @@ st.markdown("""
         margin-bottom: 5px !important;
         font-size: 28px;
     }
-    
     .sub-judul {
         color: #4a6b4c; 
         font-weight: 500; 
@@ -47,45 +42,36 @@ st.markdown("""
         margin-bottom: 25px;
         font-size: 14px;
     }
-    
-    /* Desain Kotak Kartu Informasi */
     .block-container .element-container div.stAlert {
         border-radius: 12px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         border: none;
     }
-    
-    /* Kartu Peringatan Tugas Belum Selesai */
     div[data-testid="stNotification"] {
         border-left: 5px solid #d9534f !important;
         background-color: #ffffff !important;
         border-radius: 10px;
         box-shadow: 0 4px 12px rgba(217, 83, 79, 0.08);
     }
-    
-    /* Percantik Tombol Menu Navigasi */
     div[data-testid="stRadio"] > div {
         background-color: #ffffff;
         padding: 10px;
         border-radius: 12px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
-    
-    /* Kotak Kontainer Custom untuk Data Kebun */
     .kartu-kebun {
         background-color: #ffffff;
         padding: 20px;
         border-radius: 15px;
-        border-left: 6px solid #4e3629; /* Cokelat Kopi */
+        border-left: 6px solid #4e3629;
         box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         margin-bottom: 20px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- EKSEKUSI PENAMPILAN LOGO (GARANSI CENTER & TAJAM) ---
+# --- EKSEKUSI PENAMPILAN LOGO ---
 NAMA_LOGO = "logo.png"
-
 if os.path.exists(NAMA_LOGO):
     try:
         html_logo = konversi_gambar_ke_html(NAMA_LOGO)
@@ -93,11 +79,19 @@ if os.path.exists(NAMA_LOGO):
     except:
         st.markdown("<p style='text-align: center; color: #d9534f; font-style: italic; font-size: 12px;'>[ Gagal memproses ketajaman logo ]</p>", unsafe_allow_html=True)
 else:
-    st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' tidak ditemukan di GitHub ]</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' tidak ditemukan ]</p>", unsafe_allow_html=True)
 
-# --- JUDUL BRANDING BARU (POSISI CENTER DI BAWAH LOGO) ---
+# --- JUDUL BRANDING ---
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-judul'>Asisten Digital Manajemen Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
+
+# --- ⚠️ FITUR BARU: TEKS PERINGATAN PENGAMAN UNTUK PETANI ---
+st.warning("""
+    ⚠️ **PENTING UNTUK KAWAN PETANI:** 
+    * Data kebun Anda tersimpan aman di HP ini. 
+    * **JANGAN** bersihkan riwayat internet (*Clear Cache/Cookies*) HP Anda agar data kebun tidak terhapus.
+    * Gunakan tombol **📥 Unduh Cadangan Excel** di menu **Data Kebun** untuk menyimpan data ke HP Anda secara berkala!
+""")
 st.write("")
 
 # --- SISTEM PENYIMPANAN DATA MANDIRI ---
@@ -127,19 +121,32 @@ if menu == "🌱 Tambah Blok":
             new_row = pd.DataFrame([[nama_blok, varietas, jenis_pupuk, tgl_tanam, jml_pohon, status_musim]], 
                                     columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
             st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_row], ignore_index=True)
-            st.success(f"🎉 Sukses! {nama_blok} berhasil ditambahkan ke sistem.")
+            st.success(f"🎉 Sukses! {nama_blok} berhasil ditambahkan.")
             st.rerun()
 
-# 2. MENU: TAMPILAN DATA KEBUN
+# 2. MENU: TAMPILAN DATA KEBUN (DENGAN TOMBOL UNDUH EXCEL)
 elif menu == "📊 Data Kebun":
     st.markdown("<h3 style='color: #1e3f20;'>📊 Ringkasan Kebun</h3>", unsafe_allow_html=True)
     
     if st.session_state.kebun_data.empty:
-        st.info("📲 Belum ada data kebun. Silakan masuk ke menu '🌱 Tambah Blok' terlebih dahulu untuk mengisi data kebun Anda sendiri.")
+        st.info("📲 Belum ada data kebun. Silakan masuk ke menu '🌱 Tambah Blok' terlebih doaulu.")
     else:
         total_pohon = st.session_state.kebun_data['Jumlah_Pohon'].sum()
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
+        
+        # --- 📥 FITUR BARU: TOMBOL UNDUH CADANGAN EXCEL/CSV ---
+        # Mengubah tabel data menjadi format teks CSV yang dipahami Excel HP
+        data_csv = st.session_state.kebun_data.to_csv(index=False).encode('utf-8')
+        
         st.write("")
+        st.download_button(
+            label="📥 Unduh Cadangan Data Kebun (Excel/CSV)",
+            data=data_csv,
+            file_name=f"Cadangan_Kebun_Kopi_{datetime.now().strftime('%d_%b_%Y')}.csv",
+            mime='text/csv',
+            help="Klik di sini untuk mengamankan data kebun ke dalam folder Download HP Anda."
+        )
+        st.write("---")
         
         for idx, row in st.session_state.kebun_data.iterrows():
             st.markdown(f"""
@@ -202,13 +209,3 @@ elif menu == "🧮 Kalkulator Pupuk":
         st.info("Masukkan data kebun terlebih dahulu untuk mengaktifkan kalkulator.")
     else:
         pilihan_blok = st.selectbox("Pilih Blok Kebun:", st.session_state.kebun_data['Blok'].unique())
-        df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
-        
-        if not df_filter.empty:
-            jumlah_pohon = int(df_filter.iloc['Jumlah_Pohon'])
-            sistem_pupuk = str(df_filter.iloc['Jenis_Pupuk'])
-            
-            st.info(f"**Blok Terpilih:** {pilihan_blok} | **Populasi:** {jumlah_pohon} Pohon")
-            
-            if "Organik" in sistem_pupuk:
-                total_kebutuhan = jumlah_pohon * 5.0
