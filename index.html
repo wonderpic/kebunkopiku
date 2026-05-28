@@ -20,7 +20,7 @@
         
         /* Navigasi Tab Menu */
         .nav-tabs { display: flex; background: #ffffff; padding: 5px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 20px; justify-content: space-between; }
-        .tab-btn { flex: 1; background: transparent; border: none; padding: 10px 5px; font-size: 12px; font-weight: bold; color: #7f8c8d; cursor: pointer; border-radius: 8px; text-align: center; }
+        .tab-btn { flex: 1; background: transparent; border: none; padding: 10px 5px; font-size: 12px; font-weight: bold; color: #7f8c8d; cursor: pointer; border-radius: 8px; text-align: center; outline: none; }
         .tab-btn.active { background: #1e3f20; color: #ffffff; }
         
         /* Konten Tab */
@@ -38,9 +38,9 @@
         .kartu-data { background: #ffffff; padding: 15px; border-radius: 12px; border-left: 6px solid #4e3629; box-shadow: 0 3px 10px rgba(0,0,0,0.03); margin-bottom: 12px; position: relative; }
         .kartu-data h3 { font-size: 16px; color: #4e3629; margin-bottom: 5px; }
         .kartu-data p { font-size: 13px; margin: 3px 0; color: #34495e; }
-        .btn-hapus { background: #d9534f; color: white; border: none; padding: 4px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; margin-top: 8px; }
+        .btn-hapus { background: #d9534f; color: white; border: none; padding: 6px 12px; font-size: 11px; border-radius: 6px; cursor: pointer; margin-top: 8px; font-weight: bold; }
         
-        .kartu-tugas { background: #ffffff; padding: 12px; border-radius: 12px; border-left: 6px solid #d9534f; box-shadow: 0 3px 10px rgba(219,68,85,0.08); margin-bottom: 12px; }
+        .kartu-tugas { background: #ffffff; padding: 12px; border-radius: 12px; border-left: 6px solid #d9534f; box-shadow: 0 3px 10px rgba(219,68,85,0.08); margin-bottom: 12px; text-align: left; }
         .label-waktu { font-size: 11px; font-weight: bold; color: #d9534f; margin-bottom: 3px; display: block; }
         .label-agro { font-size: 11px; font-style: italic; color: #7f8c8d; margin-bottom: 5px; display: block; }
         
@@ -61,14 +61,14 @@
 
     <!-- Kotak Warning -->
     <div class="kotak-warning">
-        ⚠️ **PENTING UNTUK REKAN PETANI:** Data kebun Anda tersimpan aman dan terisolasi di memori HP Anda sendiri. Data tidak akan hilang saat halaman ditutup atau disegarkan.
+        ⚠️ <b>PENTING UNTUK REKAN PETANI:</b> Data kebun Anda tersimpan aman dan terisolasi di memori HP Anda sendiri. Data tidak akan hilang saat halaman ditutup atau disegarkan.
     </div>
 
     <!-- Navigasi Menu -->
     <div class="nav-tabs">
-        <button class="tab-btn active" onclick="bukaTab('data')">📊 Data Kebun</button>
-        <button class="tab-btn" onclick="bukaTab('jadwal')">📅 Jadwal Kerja</button>
-        <button class="tab-btn" onclick="bukaTab('tambah')">🌱 Tambah Blok</button>
+        <button class="tab-btn active" id="btn-data" onclick="bukaTab('data')">📊 Data Kebun</button>
+        <button class="tab-btn" id="btn-jadwal" onclick="bukaTab('jadwal')">📅 Jadwal Kerja</button>
+        <button class="tab-btn" id="btn-tambah" onclick="bukaTab('tambah')">🌱 Tambah Blok</button>
     </div>
 
     <!-- TAB 1: DATA KEBUN -->
@@ -137,7 +137,10 @@
 </div>
 
 <script>
+    // Inisialisasi Tanggal
     document.getElementById('tgl_tanam').valueAsDate = new Date();
+    
+    // Membaca Database Lokal HP Petani
     let kebunData = JSON.parse(localStorage.getItem('talaga_kebun_data')) || [];
 
     function bukaTab(namaTab) {
@@ -145,7 +148,7 @@
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         
         document.getElementById('tab-' + namaTab).classList.add('active');
-        if(event) event.currentTarget.classList.add('active');
+        document.getElementById('btn-' + namaTab).classList.add('active');
         
         if(namaTab === 'data') muatDataKebun();
         if(namaTab === 'jadwal') muatJadwalKerja();
@@ -188,8 +191,3 @@
     }
 
     function muatDataKebun() {
-        const wadah = document.getElementById('list-kebun');
-        const totalBox = document.getElementById('total-pohon');
-        wadah.innerHTML = "";
-        
-        if(kebunData.length === 0) {
