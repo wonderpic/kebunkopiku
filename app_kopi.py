@@ -12,7 +12,6 @@ def konversi_gambar_ke_html(jalur_gambar):
     with open(jalur_gambar, "rb") as file_gambar:
         data_binner = file_gambar.read()
         format_base64 = base64.b64encode(data_binner).decode()
-    # HTML khusus untuk mengunci pixel agar jernih tajam (anti-alias / crisp-edges)
     return f"""
     <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0px; margin-bottom: -5px;">
         <img src="data:image/png;base64,{format_base64}" style="width: 130px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;">
@@ -26,7 +25,6 @@ st.markdown("""
     section.stMain .block-container { padding-top: 1.5rem !important; max-width: 100% !important; }
     .stApp { background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%); }
     
-    /* Mengubah Warna Teks Judul Utama (Center) */
     .judul-utama {
         color: #1e3f20 !important;
         font-family: 'Helvetica Neue', sans-serif;
@@ -47,7 +45,6 @@ st.markdown("""
         font-size: 13px;
     }
     
-    /* KOTAK PERINGATAN KUNING TIPIS & HEMAT TEMPAT */
     .kotak-warning-petani {
         background-color: #fff3cd;
         color: #856404;
@@ -60,12 +57,11 @@ st.markdown("""
         text-align: left;
     }
     
-    /* Desain Kotak Kartu Informasi */
     .kartu-kebun {
         background-color: #ffffff;
         padding: 20px;
         border-radius: 15px;
-        border-left: 6px solid #4e3629; /* Cokelat Kopi */
+        border-left: 6px solid #4e3629;
         box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         margin-bottom: 20px;
     }
@@ -79,9 +75,8 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- EKSEKUSI PENAMPILAN LOGO (GARANSI CENTER & TAJAM) ---
+# --- EKSEKUSI PENAMPILAN LOGO ---
 NAMA_LOGO = "logo.png"
-
 if os.path.exists(NAMA_LOGO):
     try:
         html_logo = konversi_gambar_ke_html(NAMA_LOGO)
@@ -91,11 +86,9 @@ if os.path.exists(NAMA_LOGO):
 else:
     st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' tidak ditemukan ]</p>", unsafe_allow_html=True)
 
-# --- JUDUL APLIKASI (CENTER DI BAWAH LOGO) ---
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
 
-# --- KOTAK PERINGATAN KUNING PAS & HEMAT TEMPAT ---
 st.markdown("""
     <div class="kotak-warning-petani">
         ⚠️ **PENTING UNTUK PETANI:** Data kebun tersimpan aman di memori internet HP Anda. <b>JANGAN</b> hapus riwayat internet (Cache/Cookies) HP Anda agar data tidak hilang secara otomatis.
@@ -106,7 +99,7 @@ st.markdown("""
 if 'kebun_data' not in st.session_state:
     st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
 
-# --- NAVIGASI MENU UTAMA (3 MENU UTAMA PALING STABIL) ---
+# --- NAVIGASI MENU UTAMA ---
 menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🌱 Tambah Blok"], horizontal=True)
 st.write("---")
 
@@ -158,40 +151,64 @@ elif menu == "📊 Data Kebun":
                 st.success(f"Blok {row['Blok']} telah berhasil dihapus!")
                 st.rerun()
 
-# 3. MENU: TAMPILAN JADWAL & PERINGATAN PINTAR (STABIL 100%)
+# 3. MENU: JADWAL KERJA (🌟 DIURUTKAN BERDASARKAN TANGGAL TERDEKAT DENGAN FIX ILOC/VALUES 🌟)
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
     if st.session_state.kebun_data.empty:
         st.info("Belum ada jadwal. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
     else:
-        for idx, row in st.session_state.kebun_data.iterrows():
+        # 1. Kumpulkan semua tugas lintas blok ke satu wadah tunggal
+        semua_tugas_gabungan = []
+        
+        # Konversi ke dict records agar aman dibaca looping murni
+        daftar_kebun_aman = st.session_state.kebun_data.to_dict('records')
+        
+        for row in daftar_kebun_aman:
             blok_id = row['Blok']
-            tgl = pd.to_datetime(row['Tanggal_Tanam'])
             musim = row['Status_Musim']
+            var_kopi = row['Varietas']
             
-            st.markdown(f"#### 📍 Blok Kerja: **{blok_id}** ({row['Varietas']})")
-            
-            tugas_list = []
-            if "Organik" in row['Jenis_Pupuk']:
-                tugas_list += [("🟫 Aplikasi Pupuk Dasar (Kompos)", 14), ("🟫 Pemupukan Organik Tahap 1", 120)]
+            # Parsing tanggal tanam dari DataFrame secara aman
+            tgl_tanam_raw = row['Tanggal_Tanam']
+            if isinstance(tgl_tanam_raw, str):
+                try:
+                    tgl = datetime.strptime(tgl_tanam_raw.split()[0], "%Y-%m-%d")
+                except:
+                    tgl = datetime.now()
             else:
-                tugas_list += [("🧪 Aplikasi Pupuk Kimia Dasar", 30), ("🧪 Pemupukan NPK Vegetatif", 90)]
-            
-            if row['Varietas'] == "Arabika":
-                tugas_list += [("✂️ Pangkas Bentuk Batang Tunggal", 365), ("🍒 Estimasi Panen Perdana Arabika", 730)]
+                tgl = pd.to_datetime(tgl_tanam_raw)
+                
+            tugas_lokal = []
+            if "Organik" in str(row['Jenis_Pupuk']):
+                tugas_lokal += [("🟫 Aplikasi Pupuk Dasar (Kompos)", 14), ("🟫 Pemupukan Organik Tahap 1", 120)]
             else:
-                tugas_list += [("✂️ Pangkas Wiwilan Tunas Air", 60), ("🍒 Estimasi Panen Perdana Robusta", 900)]
+                tugas_lokal += [("🧪 Aplikasi Pupuk Kimia Dasar", 30), ("🧪 Pemupukan NPK Vegetatif", 90)]
+            
+            if var_kopi == "Arabika":
+                tugas_lokal += [("✂️ Pangkas Bentuk Batang Tunggal", 365), ("🍒 Estimasi Panen Perdana Arabika", 730)]
+            else:
+                tugas_lokal += [("✂️ Pangkas Wiwilan Tunas Air", 60), ("🍒 Estimasi Panen Perdana Robusta", 900)]
             
             if musim == "Musim Kemarau":
-                tugas_list += [("💧 Penyiraman Rutin Kemarau T1", 3), ("💧 Penyiraman Rutin Kemarau T2", 6)]
+                tugas_lokal += [("💧 Penyiraman Rutin Kemarau T1", 3), ("💧 Penyiraman Rutin Kemarau T2", 6)]
             else:
-                tugas_list += [("🌧️ Cek Saluran Drainase Kebun", 5), ("🌧️ Pembersihan Gulma Hujan", 15)]
+                tugas_lokal += [("🌧️ Cek Saluran Drainase Kebun", 5), ("🌧️ Pembersihan Gulma Hujan", 15)]
                 
-            tugas_list.sort(key=lambda x: x)
-            
-            for nama_tugas, jeda_hari in tugas_list:
+            # Hitung target tanggal eksak dan simpan identitas bloknya
+            for nama_tugas, jeda_hari in tugas_lokal:
                 tgl_target = tgl + timedelta(days=jeda_hari)
-                tgl_indo = tgl_target.strftime('%d %b %Y')
-                st.error(f"⚠️ **TUGAS HARUS DILAKUKAN**\n\n**{nama_tugas}**\n\n📆 Target: {tgl_indo}")
-            st.markdown("---")
+                semua_tugas_gabungan.append({
+                    "blok": blok_id,
+                    "varietas": var_kopi,
+                    "tugas": nama_tugas,
+                    "target_waktu": tgl_target
+                })
+        
+        # 2. PROSES UTAMA: Urutkan wadah tugas berdasarkan kunci tanggal terdekat
+        semua_tugas_gabungan.sort(key=lambda x: x["target_waktu"])
+        
+        # 3. Tampilkan secara berurutan ke layar HP petani
+        for tgs in semua_tugas_gabungan:
+            tgl_cetak = tgs["target_waktu"].strftime('%d %b %Y')
+            st.error(f"📍 **Blok:** {tgs['blok']} ({tgs['varietas']})\n\n⚠️ **TUGAS:** {tgs['tugas']}\n\n📆 **Target:** {tgl_cetak}")
