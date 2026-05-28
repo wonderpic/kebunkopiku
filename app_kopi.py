@@ -25,9 +25,9 @@ st.markdown("""
     header.stAppHeader { background-color: transparent !important; height: 0px !important; }
     section.stMain .block-container { padding-top: 1.5rem !important; max-width: 100% !important; }
     .stApp { background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%); }
-    .judul-utama { color: #1e3f20 !important; font-family: 'Helvetica Neue', sans-serif; font-weight: 800; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); margin-top: 15px !important; margin-bottom: 5px !important; font-size: 28px; }
-    .sub-judul { color: #4a6b4c; font-weight: 500; text-align: center; margin-top: -5px; margin-bottom: 20px; font-size: 14px; }
-    .kotak-warning-petani { background-color: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 8px; font-size: 11px; line-height: 1.4; margin-bottom: 20px; border: 1px solid #ffeeba; text-align: left; }
+    .judul-utama { color: #1e3f20 !important; font-family: 'Helvetica Neue', sans-serif; font-weight: 800; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); margin-top: 5px !important; margin-bottom: 2px !important; font-size: 24px; }
+    .sub-judul { color: #4a6b4c; font-weight: 500; text-align: center; margin-top: 0px; margin-bottom: 12px; font-size: 13px; }
+    .kotak-warning-petani { background-color: #fff3cd; color: #856404; padding: 6px 12px; border-radius: 8px; font-size: 11px; line-height: 1.4; margin-bottom: 20px; border: 1px solid #ffeeba; text-align: left; }
     .kartu-kebun { background-color: #ffffff; padding: 20px; border-radius: 15px; border-left: 6px solid #4e3629; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 20px; }
     div[data-testid="stRadio"] > div { background-color: #ffffff; padding: 10px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
     </style>
@@ -51,7 +51,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 🌟 REKOMENDASI FIX: SINKRONISASI TANGGAL MEMORI LINK 🌟 ---
+# --- JEMBATAN KUNCI LINK BRIDGING ---
 query_params = st.query_params
 
 if 'kebun_data' not in st.session_state:
@@ -128,16 +128,16 @@ elif menu == "📊 Data Kebun":
                     st.query_params.clear()
                 st.rerun()
 
-# 3. MENU: TAMPILAN JADWAL
+# 3. MENU: TAMPILAN JADWAL (SINKRONISASI STATE FIX)
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
     if st.session_state.kebun_data.empty:
         st.info("Belum ada jadwal. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
     else:
-        for idx, row in st.session_data.kebun_data.iterrows():
+        # --- PERBAIKAN FATAL TYPO: Mengubah st.session_data menjadi st.session_state ---
+        for idx, row in st.session_state.kebun_data.iterrows():
             blok_id = row['Blok']
-            # Konversi paksa string tanggal dari link browser menjadi format waktu Python murni
             tgl = pd.to_datetime(row['Tanggal_Tanam'])
             musim = row['Status_Musim']
             h_mdpl = int(row['Ketinggian'])
