@@ -7,18 +7,21 @@ from datetime import datetime, timedelta
 # Konfigurasi Tampilan Utama Halaman HP
 st.set_page_config(page_title="Talaga Hangsa KopiPlanPro", layout="centered")
 
-# --- SISTEM PROSES GAMBAR BASE64 (MENGUNCI KETAJAMAN & CENTER MUTLAK) ---
+# --- SISTEM PROSES GAMBAR BASE64 ---
 def konversi_gambar_ke_html(jalur_gambar):
-    with open(jalur_gambar, "rb") as file_gambar:
-        data_binner = file_gambar.read()
-        format_base64 = base64.b64encode(data_binner).decode()
-    return f"""
-    <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0px; margin-bottom: -5px;">
-        <img src="data:image/png;base64,{format_base64}" style="width: 130px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;">
-    </div>
-    """
+    try:
+        with open(jalur_gambar, "rb") as file_gambar:
+            data_binner = file_gambar.read()
+            format_base64 = base64.b64encode(data_binner).decode()
+        return f"""
+        <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0px; margin-bottom: -5px;">
+            <img src="data:image/png;base64,{format_base64}" style="width: 130px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;">
+        </div>
+        """
+    except:
+        return ""
 
-# --- KODE DESAIN TEMA LUXURY (HEMAT SPACE) ---
+# --- KODE DESAIN TEMA LUXURY ---
 st.markdown("""
     <style>
     header.stAppHeader { background-color: transparent !important; height: 0px !important; }
@@ -26,7 +29,7 @@ st.markdown("""
     .stApp { background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%); }
     .judul-utama { color: #1e3f20 !important; font-family: 'Helvetica Neue', sans-serif; font-weight: 800; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); margin-top: 5px !important; margin-bottom: 2px !important; font-size: 24px; }
     .sub-judul { color: #4a6b4c; font-weight: 500; text-align: center; margin-top: 0px; margin-bottom: 12px; font-size: 13px; }
-    .kotak-warning-petani { background-color: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 8px; font-size: 11px; line-height: 1.4; margin-bottom: 20px; border: 1px solid #ffeeba; text-align: left; }
+    .kotak-warning-petani { background-color: #fff3cd; color: #856404; padding: 6px 12px; border-radius: 8px; font-size: 11px; line-height: 1.4; margin-bottom: 20px; border: 1px solid #ffeeba; text-align: left; }
     .kartu-kebun { background-color: #ffffff; padding: 20px; border-radius: 15px; border-left: 6px solid #4e3629; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 20px; }
     div[data-testid="stRadio"] > div { background-color: #ffffff; padding: 10px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
     </style>
@@ -39,9 +42,7 @@ if os.path.exists(NAMA_LOGO):
         html_logo = konversi_gambar_ke_html(NAMA_LOGO)
         st.markdown(html_logo, unsafe_allow_html=True)
     except:
-        st.markdown("<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ Memuat Logo... ]</p>", unsafe_allow_html=True)
-else:
-    st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' tidak ditemukan ]</p>", unsafe_allow_html=True)
+        pass
 
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
@@ -110,7 +111,7 @@ elif menu == "📊 Data Kebun":
                 st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
                 st.rerun()
 
-# 3. MENU: JADWAL KERJA (URUTAN WAKTEDU TERDEKAT GLOBAL FIX LINTAS BLOK)
+# 3. MENU: JADWAL KERJA (KOREKSI TOTAL BEBAS CRASH PANDAS)
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
@@ -119,7 +120,10 @@ elif menu == "📅 Jadwal Kerja":
     else:
         keranjang_tugas_global = []
         
-        for idx, row in st.session_state.kebun_data.iterrows():
+        # Mengubah ekstraksi data ke format kamus murni agar aman 100% dari crash data Pandas .iloc
+        data_list_aman = st.session_state.kebun_data.to_dict('records')
+        
+        for row in data_list_aman:
             blok_id = row['Blok']
             lokasi = row['Lokasi']
             musim = row['Status_Musim']
@@ -159,7 +163,7 @@ elif menu == "📅 Jadwal Kerja":
                     "varietas": var_kopi
                 })
         
-        # Urutkan seluruh daftar tugas berdasarkan waktu pengerjaan yang paling dekat
+        # Urutkan seluruh daftar tugas secara global berdasarkan tanggal terdekat
         keranjang_tugas_global.sort(key=lambda x: x["tgl_target"])
         hari_ini = datetime.now()
         
@@ -173,3 +177,6 @@ elif menu == "📅 Jadwal Kerja":
                 label_waktu = f"⏳ **JADWAL {selisih} HARI LAGI**"
             
             with st.container():
+                st.markdown(f"📍 **Blok:** {tgs['blok']} ({tgs['lokasi']} - {tgs['mdpl']} mdpl)")
+                
+                if tgs["varietas"] == "Arabika" and tgs["mdpl"] < 1000:
