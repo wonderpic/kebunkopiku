@@ -1,7 +1,9 @@
 import streamlit as st
 import json
 import base64
+import os
 from datetime import datetime, timedelta
+from PIL import Image
 
 # Konfigurasi Tampilan Utama Halaman HP
 st.set_page_config(page_title="Talaga Hangsa KopiPlanPro", layout="centered")
@@ -17,14 +19,31 @@ st.markdown("""
     .kotak-warning-petani { background-color: #fff3cd; color: #856404; padding: 6px 12px; border-radius: 8px; font-size: 11px; line-height: 1.4; margin-bottom: 15px; border: 1px solid #ffeeba; text-align: left; }
     .kartu-kebun { background-color: #ffffff; padding: 15px; border-radius: 15px; border-left: 6px solid #4e3629; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 15px; }
     div[data-testid="stRadio"] > div { background-color: #ffffff; padding: 8px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    
+    /* Memaksa elemen st.image bawaan agar berada di tengah */
+    [data-testid="stImage"] {
+        display: flex;
+        justify-content: center;
+        margin: 0 auto !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- BLOK LOGO JALUR INTERNET RESMI (ANTI-BLUR & ANTI-MISSING) ---
-# Menggunakan penampung gambar Streamlit agar logo tampil jernih di posisi tengah
-URL_LOGO_RESMI = "https://githubusercontent.com"
-st.markdown(f"""<div style="text-align: center; width: 100%; margin-bottom: 5px;"><img src="{URL_LOGO_RESMI}" style="width: 70px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;"></div>""", unsafe_allow_html=True)
+# --- 🌟 KOREKSI UTAMA: MEMANGGIL FILE logo.png DI GITHUB SECARA TAJAM 🌟 ---
+NAMA_LOGO = "logo.png"
 
+if os.path.exists(NAMA_LOGO):
+    try:
+        # Membuka file gambar lokal logo.png menggunakan PIL
+        gambar_logo = Image.open(NAMA_LOGO)
+        # Menampilkan gambar dengan layout otomatis Streamlit yang dikunci CSS ke posisi tengah
+        st.image(gambar_logo, width=100)
+    except:
+        st.markdown("<p style='text-align: center; color: #888; font-style: italic; font-size: 11px;'>[ Memuat Logo... ]</p>", unsafe_allow_html=True)
+else:
+    st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 11px;'>[ File '{NAMA_LOGO}' tidak ditemukan ]</p>", unsafe_allow_html=True)
+
+# --- JUDUL BRANDING ---
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
 
@@ -148,7 +167,7 @@ elif menu == "📅 Jadwal Kerja":
                 st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_target.strftime('%d %b %Y')}")
             st.markdown("---")
 
-# 4. MENU: KALKULATOR PUPUK & AFILIASI (KOREKSI TOTAL VARIABEL BEBAS CRASH)
+# 4. MENU: KALKULATOR PUPUK & AFILIASI
 elif menu == "🧮 Kalkulator Pupuk":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🧮 Kalkulator Kebutuhan Pupuk</h3>", unsafe_allow_html=True)
     
@@ -165,7 +184,6 @@ elif menu == "🧮 Kalkulator Pupuk":
                 break
         
         if blok_terpilih is not None:
-            # --- PERBAIKAN VARIABEL FIX: Menggunakan objek blok_terpilih yang valid ---
             jumlah_pohon = int(blok_terpilih['Jumlah_Pohon'])
             sistem_pupuk = str(blok_terpilih['Jenis_Pupuk'])
             
@@ -175,10 +193,3 @@ elif menu == "🧮 Kalkulator Pupuk":
             jenis_barang = ""
             if "Organik" in sistem_pupuk:
                 tonase = jumlah_pohon * 5.0
-                st.metric(label="Total Pupuk Kompos/Kohe Dibutuhkan", value=f"{tonase:,.1f} Kg")
-                jenis_barang = "Pupuk Organik Kompos"
-            else:
-                tonase = (jumlah_pohon * 100) / 1000
-                st.metric(label="Total Pupuk NPK Kimia Dibutuhkan", value=f"{tonase:,.1f} Kg")
-                jenis_barang = "Pupuk Kimia NPK"
-                
