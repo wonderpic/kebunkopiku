@@ -51,11 +51,10 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 🌟 PENYEMPURNAAN UTAMA: SISTEM KUNCI LINK AMAN ANTI-CRASH 🌟 ---
+# --- 🌟 SISTEM SINKRONISASI MEMORI LINK SECARA INSTAN 🌟 ---
 if 'kebun_data' not in st.session_state:
     st.session_state.kebun_data = []
 
-# Membaca data dari tautan url secara aman menggunakan fungsi .get() bawaan Streamlit terbaru
 try:
     params = st.query_params
     if 'kebun_backup' in params:
@@ -111,6 +110,7 @@ if menu == "🌱 Tambah Blok":
             st.session_state.kebun_data.append(new_block)
             kunci_data_ke_link()
             st.success(f"🎉 Sukses! {nama_blok} berhasil disimpan.")
+            # MEMAKSA HALAMAN REFRESH SECARA INSTAN SUPAYA JADWAL TUGAS LANGSUNG KELUAR
             st.rerun()
 
 # 2. MENU: DATA KEBUN
@@ -135,14 +135,14 @@ elif menu == "📊 Data Kebun":
                 </div>
             """, unsafe_allow_html=True)
             
-            if st.button(f"🗑️ Hapus {row.get('Blok')}", key=f"hapus_{row.get('Blok')}_{idx}"):
+            if st.button(f"🗑️ Hapus {row.get('Blok')}", key=f"hapus_{row.get('Blok']}_{idx}"):
                 st.session_state.kebun_data.pop(idx)
                 kunci_data_ke_link()
                 if not st.session_state.kebun_data:
                     st.query_params.clear()
                 st.rerun()
 
-# 3. MENU: JADWAL KERJA (PERBAIKAN TOTAL FORMAT STR WAKTU)
+# 3. MENU: JADWAL KERJA
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
@@ -155,7 +155,6 @@ elif menu == "📅 Jadwal Kerja":
             h_mdpl = int(row.get('Ketinggian', 800))
             var_kopi = row.get('Varietas')
             
-            # Membongkar teks tanggal secara aman menggunakan split strip bawaan Python asli (Anti-Mogok)
             tgl_str = row.get('Tanggal_Tanam')
             try:
                 tgl_obj = datetime.strptime(tgl_str, "%Y-%m-%d")
@@ -188,3 +187,6 @@ elif menu == "📅 Jadwal Kerja":
                 tugas_list += [("🌧️ Cek Saluran Drainase Kebun", 5), ("🌧️ Pembersihan Gulma Hujan", 15)]
                 
             tugas_list.sort(key=lambda x: x)
+            # --- 🌟 TAMPILAN REKOMENDASI TUGAS YANG SUDAH DIPERBAIKI 🌟 ---
+            for nama_tugas, jeda_hari in tugas_list:
+                tgl_target = tgl_obj + timedelta(days=jeda_hari)
