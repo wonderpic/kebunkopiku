@@ -47,7 +47,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- SISTEM DATABASE MANAJEMEN MANDIRI BERSIH ---
+# --- SISTEM DATABASE MANAJEMEN MANDIRI ---
 if 'kebun_data' not in st.session_state:
     st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
 
@@ -141,7 +141,7 @@ elif menu == "📅 Jadwal Kerja":
                 st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_target.strftime('%d %b %Y')}")
             st.markdown("---")
 
-# 4. MENU: KALKULATOR PUPUK & AFILIASI (KOREKSI SINTAKS TOTAL)
+# 4. MENU: KALKULATOR PUPUK & AFILIASI (KOREKSI TOTAL BEBAS CRASH)
 elif menu == "🧮 Kalkulator Pupuk":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🧮 Kalkulator Kebutuhan Pupuk</h3>", unsafe_allow_html=True)
     
@@ -152,10 +152,14 @@ elif menu == "🧮 Kalkulator Pupuk":
         df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
         
         if not df_filter.empty:
-            # --- 🌟 KOREKSI SINTAKS .values[0] (GARANSI DROPDOWN JALAN) 🌟 ---
-            jumlah_pohon = int(df_filter['Jumlah_Pohon'].values[0])
-            sistem_pupuk = str(df_filter['Jenis_Pupuk'].values[0])
+            # --- KUNCI SOLUSI UTAMA: Menggunakan .iloc[0] agar pembacaan baris ke bawah lancar ---
+            jumlah_pohon = int(df_filter['Jumlah_Pohon'].iloc[0])
+            sistem_pupuk = str(df_filter['Jenis_Pupuk'].iloc[0])
+            
             st.info(f"**Blok Terpilih:** {pilihan_blok} | **Populasi:** {jumlah_pohon} Pohon")
+            
+            tonase = 0.0
+            jenis_barang = ""
             
             if "Organik" in sistem_pupuk:
                 tonase = jumlah_pohon * 5.0
@@ -166,6 +170,7 @@ elif menu == "🧮 Kalkulator Pupuk":
                 st.metric(label="Total Pupuk NPK Kimia Dibutuhkan", value=f"{tonase:,.1f} Kg")
                 jenis_barang = "Pupuk Kimia NPK"
             
-            # --- 🛒 MENU PENAWARAN AFILIASI WA ---
+            # --- 🛒 MENU PENAWARAN AGEN TERDEKAT (GARANSI MUNCUL SEKARANG) ---
             st.write("---")
             st.markdown("<h4 style='color: #1e3f20; margin-top:0;'>🛒 Pesan Pupuk Lewat Agen Terdekat</h4>", unsafe_allow_html=True)
+            
