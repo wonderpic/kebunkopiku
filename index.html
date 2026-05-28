@@ -137,10 +137,10 @@
 </div>
 
 <script>
-    // Inisialisasi Tanggal
+    // Inisialisasi Tanggal Hari Ini
     document.getElementById('tgl_tanam').valueAsDate = new Date();
     
-    // Membaca Database Lokal HP Petani
+    // Membaca Memori Harddisk HP
     let kebunData = JSON.parse(localStorage.getItem('talaga_kebun_data')) || [];
 
     function bukaTab(namaTab) {
