@@ -36,7 +36,7 @@ st.markdown("""
         font-size: 14px;
     }
     
-    /* Memaksa elemen st.image agar berada di tengah */
+    /* Centering bingkai gambar bawaan Streamlit */
     [data-testid="stImage"] {
         display: flex;
         justify-content: center;
@@ -78,17 +78,18 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- BAGIAN LOGO PENGINISIASI (DISETTING CENTER & TAJAM DENGAN PIL) ---
+# --- BAGIAN LOGO PENGINISIASI (DISETTING CENTER & TAJAM TANPA TRAILING HTML PATH) ---
 NAMA_LOGO = "Asset 3.png"
 
+# Pengecekan file secara langsung pada root folder repositori
 if os.path.exists(NAMA_LOGO):
     try:
-        # Membuka gambar asli menggunakan PIL
+        # Membuka gambar asli dengan Pillow
         gambar_logo = Image.open(NAMA_LOGO)
-        # Menampilkan gambar dengan layout otomatis Streamlit yang dikunci CSS ke posisi tengah
-        st.image(gambar_logo, width=130)
+        # Menampilkan gambar secara center mutlak dengan layout Streamlit asli (bebas dari error link)
+        st.image(gambar_logo, width=140)
     except:
-        st.markdown(f"<p style='text-align: center; color: #d9534f; font-style: italic; font-size: 12px;'>[ Gagal memproses file '{NAMA_LOGO}' ]</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #d9534f; font-style: italic; font-size: 12px;'>[ Gagal memproses file gambar ]</p>", unsafe_allow_html=True)
 else:
     st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' tidak ditemukan di GitHub ]</p>", unsafe_allow_html=True)
 
@@ -213,4 +214,3 @@ elif menu == "🧮 Kalkulator Pupuk":
                 st.caption("💡 Dosis standar: 5 Kg pupuk organik per pohon.")
             else:
                 total_kebutuhan_kg = (jumlah_pohon * 100) / 1000
-                st.metric(label="Total Pupuk NPK Kimia yang Diperlukan", value=f"{total_kebutuhan_kg:,.1f} Kg")
