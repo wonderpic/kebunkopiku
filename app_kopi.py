@@ -158,7 +158,7 @@ elif menu == "📊 Data Kebun":
                     <h4 style="margin-top:0; margin-bottom:5px; color:#4e3629;">📍 Blok: {row['Blok']}</h4>
                     <p style="margin:2px 0; font-size:13px;"><b>Varietas:</b> Kopi {row['Varietas']} | <b>Cuaca:</b> {row['Status_Musim']}</p>
                     <p style="margin:2px 0; font-size:13px;"><b>Sistem Pupuk:</b> {row['Jenis_Pupuk']}</p>
-                    <p style="margin:2px 0; font-size:12px; color:#666;"><b>Populasi:</b> {row['Jumlah_Pohon']} Pohon | <b>Tanam:</b> {row['Tanggal_Tanam']}</p>
+                    <p style="margin:2px 0; font-size:12px; color:#666;"><b>Populasi:</b> {row['Jumlah_Pohon']} Pohon | **Tanam:** {row['Tanggal_Tanam']}</p>
                 </div>
             """, unsafe_allow_html=True)
             
@@ -204,7 +204,7 @@ elif menu == "📅 Jadwal Kerja":
                 st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_indo}")
             st.markdown("---")
 
-# 4. MENU: TAMPILAN KALKULATOR (DENGAN FITUR DROPDOWN AFILIASI LOKAL)
+# 4. MENU: TAMPILAN KALKULATOR (DENGAN KOREKSI BUG SINTAKS ILOC)
 elif menu == "🧮 Kalkulator Pupuk":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🧮 Kalkulator Kebutuhan Pupuk</h3>", unsafe_allow_html=True)
     
@@ -215,17 +215,17 @@ elif menu == "🧮 Kalkulator Pupuk":
         df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
         
         if not df_filter.empty:
-            jumlah_pohon = int(df_filter.iloc['Jumlah_Pohon'])
-            sistem_pupuk = str(df_filter.iloc['Jenis_Pupuk'])
+            # --- PERBAIKAN UTAMA: Menggunakan indeks .iloc[0] dengan benar ---
+            jumlah_pohon = int(df_filter['Jumlah_Pohon'].iloc[0])
+            sistem_pupuk = str(df_filter['Jenis_Pupuk'].iloc[0])
             
             st.info(f"**Blok Terpilih:** {pilihan_blok} | **Populasi:** {jumlah_pohon} Pohon")
             
-            # Variabel untuk menampung total jumlah pesanan
             tonase_pesanan = 0.0
             satuan = "Kg"
+            jenis_barang = ""
             
             if "Organik" in sistem_pupuk:
                 tonase_pesanan = jumlah_pohon * 5.0
                 st.metric(label="Total Pupuk Kompos/Kohe Dibutuhkan", value=f"{tonase_pesanan:,.1f} Kg")
                 jenis_barang = "Pupuk Organik Kompos"
-            else:
