@@ -51,23 +51,22 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 🌟 JEMBATAN KUNCI LINK BERSIH LOKAL (ANTI-HILANG REFRESH) 🌟 ---
+# --- JEMBATAN KUNCI LINK BERSIH LOKAL (ANTI-HILANG REFRESH) ---
 query_params = st.query_params
 
-if 'kebun_list' not in st.session_state:
+if 'kebun_data' not in st.session_state:
     if 'kebun_backup' in query_params:
         try:
-            # Memulihkan data langsung dari sandi teks link url browser saat direfresh
             raw_json = base64.b64decode(query_params['kebun_backup']).decode('utf-8')
-            st.session_state.kebun_list = json.loads(raw_json)
+            st.session_state.kebun_data = json.loads(raw_json)
         except:
-            st.session_state.kebun_list = []
+            st.session_state.kebun_data = []
     else:
-        st.session_state.kebun_list = []
+        st.session_state.kebun_data = []
 
 def kunci_data_ke_link():
-    if st.session_state.kebun_list:
-        json_str = json.dumps(st.session_state.kebun_list)
+    if st.session_state.kebun_data:
+        json_str = json.dumps(st.session_state.kebun_data)
         b64_str = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
         st.query_params['kebun_backup'] = b64_str
 
@@ -90,11 +89,10 @@ if menu == "🌱 Tambah Blok":
         submit_button = st.form_submit_button(label="⚡ Simpan Blok Baru")
 
     if submit_button and nama_blok:
-        nama_kembar = any(k['Blok'] == nama_blok for k in st.session_state.kebun_list)
+        nama_kembar = any(k['Blok'] == nama_blok for k in st.session_state.kebun_data)
         if nama_kembar:
             st.error(f"Nama Blok '{nama_blok}' sudah terdaftar!")
         else:
-            # Memasukkan data baru ke dalam list dictionary mandiri bawaan Python asli
             new_block = {
                 "Blok": nama_blok,
                 "Lokasi": lokasi_kebun,
@@ -105,23 +103,23 @@ if menu == "🌱 Tambah Blok":
                 "Jumlah_Pohon": int(jml_pohon),
                 "Status_Musim": status_musim
             }
-            st.session_state.kebun_list.append(new_block)
+            st.session_state.kebun_data.append(new_block)
             kunci_data_ke_link()
             st.success(f"🎉 Sukses! {nama_blok} berhasil disimpan.")
             st.rerun()
 
-# 2. MENU: TAMPILAN DATA KEBUN
+# 2. MENU: DATA KEBUN
 elif menu == "📊 Data Kebun":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📊 Ringkasan Kebun</h3>", unsafe_allow_html=True)
     
-    if not st.session_state.kebun_list:
+    if not st.session_state.kebun_data:
         st.info("📲 Belum ada data kebun Anda. Silakan isi data baru di menu '🌱 Tambah Blok'.")
     else:
-        total_pohon = sum(int(k['Jumlah_Pohon']) for k in st.session_state.kebun_list)
+        total_pohon = sum(int(k['Jumlah_Pohon']) for k in st.session_state.kebun_data)
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
         st.write("")
         
-        for idx, row in enumerate(st.session_state.kebun_list):
+        for idx, row in enumerate(st.session_state.kebun_data):
             st.markdown(f"""
                 <div class="kartu-kebun">
                     <h3 style="margin-top:0; color:#4e3629;">📍 Blok: {row['Blok']}</h3>
@@ -133,21 +131,20 @@ elif menu == "📊 Data Kebun":
             """, unsafe_allow_html=True)
             
             if st.button(f"🗑️ Hapus {row['Blok']}", key=f"hapus_{row['Blok']}_{idx}"):
-                st.session_state.kebun_list.pop(idx)
+                st.session_state.kebun_data.pop(idx)
                 kunci_data_ke_link()
-                if not st.session_state.kebun_list:
+                if not st.session_state.kebun_data:
                     st.query_params.clear()
                 st.rerun()
 
-# 3. MENU: TAMPILAN JADWAL (MENGGUNAKAN LOOPING LIST DICTIONARY MURNI - GARANSI MUNCUL 100%)
+# 3. MENU: TAMPILAN JADWAL (MENGGUNAKAN VARIABEL KEBUN_DATA SINKRON - 100% BEBAS EROR)
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
-    if not st.session_state.kebun_list:
-        st.info("Belum ada jadwal. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
+    if not st.session_state.kebun_data:
+        st.info("📲 Belum ada jadwal tugas. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
     else:
-        # Loop murni membaca data list, dipastikan data tidak akan terputus atau hilang di layar
-        for row in st.session_state.kebun_list:
+        for row in st.session_state.kebun_data:
             blok_id = row['Blok']
             tgl = pd.to_datetime(row['Tanggal_Tanam'])
             musim = row['Status_Musim']
@@ -183,3 +180,5 @@ elif menu == "📅 Jadwal Kerja":
             for nama_tugas, jeda_hari in tugas_list:
                 tgl_target = tgl + timedelta(days=jeda_hari)
                 tgl_indo = tgl_target.strftime('%d %b %Y')
+                st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_indo}")
+            st.markdown("---")
