@@ -2,22 +2,76 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 
-# Konfigurasi Tampilan Aplikasi HP
-st.set_page_config(page_title="KopiPlan Pro Fix", layout="centered")
-st.title("☕ KopiPlan Pro")
-st.caption("Aplikasi Penjadwalan, Perawatan & Kalkulator Kebun Kopi")
+# Konfigurasi Tampilan Utama
+st.set_page_config(page_title="KopiPlan Premium", layout="centered")
 
-# --- SISTEM PENYIMPANAN DATA MANDIRI (SUDAH DIBERSIHKAN) ---
-# Memastikan memori awal benar-benar kosong agar pengguna baru bisa input dari nol
+# --- KODE DESAIN TEMA (KUSTOMISASI WARNA & BACKGROUND) ---
+st.markdown("""
+    <style>
+    /* 1. Latar Belakang Aplikasi Bernuansa Alam (Gradasi Lembut) */
+    .stApp {
+        background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%);
+    }
+    
+    /* 2. Mengubah Warna Teks Judul Utama */
+    h1 {
+        color: #1e3f20 !important;
+        font-family: 'Helvetica Neue', sans-serif;
+        font-weight: 800;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    /* 3. Desain Kotak Kartu Informasi (Data Kebun & Tugas) */
+    .block-container .element-container div.stAlert {
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border: none;
+    }
+    
+    /* Kartu Peringatan Tugas Belum Selesai */
+    div[data-testid="stNotification"] {
+        border-left: 5px solid #d9534f !important;
+        background-color: #ffffff !important;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(217, 83, 79, 0.08);
+    }
+    
+    /* 4. Percantik Tombol Menu Navigasi */
+    div[data-testid="stRadio"] > div {
+        background-color: #ffffff;
+        padding: 10px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    
+    /* 5. Kotak Kontainer Custom untuk Data Kebun */
+    .kartu-kebun {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 15px;
+        border-left: 6px solid #4e3629; /* Cokelat Kopi */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        margin-bottom: 20px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- JUDUL APLIKASI ---
+st.title("☕ KopiPlan Pro")
+st.markdown("<p style='color: #4a6b4c; font-weight: 500; margin-top: -15px;'>Asisten Digital Pemeliharaan Kebun Kopi Anda</p>", unsafe_allow_html=True)
+st.write("")
+
+# --- SISTEM PENYIMPANAN DATA MANDIRI ---
 if 'kebun_data' not in st.session_state:
     st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
 
-# --- NAVIGASI MENU UTAMA (MOBILE FRIENDLY) ---
-menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal & Peringatan", "🧮 Kalkulator Pupuk", "🌱 Tambah Blok"], horizontal=True)
+# --- NAVIGASI MENU UTAMA ---
+menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🧮 Kalkulator Pupuk", "🌱 Tambah Blok"], horizontal=True)
+st.write("---")
 
 # 1. MENU: TAMBAH BLOK
 if menu == "🌱 Tambah Blok":
-    st.subheader("🌱 Tambah Blok Kebun Baru")
+    st.markdown("<h3 style='color: #1e3f20;'>🌱 Tambah Blok Kebun Baru</h3>", unsafe_allow_html=True)
     with st.form("form_kebun_baru"):
         nama_blok = st.text_input("Nama Blok Baru", placeholder="Contoh: Blok A / Lereng Barat")
         varietas = st.selectbox("Varietas Kopi", ["Arabika", "Robusta"])
@@ -28,11 +82,9 @@ if menu == "🌱 Tambah Blok":
         submit_button = st.form_submit_button(label="⚡ Simpan Blok Baru")
 
     if submit_button and nama_blok:
-        # Validasi agar tidak ada nama blok yang kembar
         if not st.session_state.kebun_data.empty and nama_blok in st.session_state.kebun_data['Blok'].values:
             st.error(f"Nama Blok '{nama_blok}' sudah terdaftar! Gunakan nama lain.")
         else:
-            # Memasukkan data baru ke dalam tabel memori
             new_row = pd.DataFrame([[nama_blok, varietas, jenis_pupuk, tgl_tanam, jml_pohon, status_musim]], 
                                     columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
             st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_row], ignore_index=True)
@@ -41,31 +93,34 @@ if menu == "🌱 Tambah Blok":
 
 # 2. MENU: TAMPILAN DATA KEBUN
 elif menu == "📊 Data Kebun":
-    st.subheader("Ringkasan Kebun")
+    st.markdown("<h3 style='color: #1e3f20;'>📊 Ringkasan Kebun</h3>", unsafe_allow_html=True)
     
     if st.session_state.kebun_data.empty:
         st.info("📲 Belum ada data kebun. Silakan masuk ke menu '🌱 Tambah Blok' terlebih dahulu untuk mengisi data kebun Anda sendiri.")
     else:
         total_pohon = st.session_state.kebun_data['Jumlah_Pohon'].sum()
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
-        st.write("---")
+        st.write("")
         
         for idx, row in st.session_state.kebun_data.iterrows():
-            with st.container():
-                st.markdown(f"### 📍 Blok: {row['Blok']}")
-                st.markdown(f"**Varietas:** Kopi {row['Varietas']} | **Cuaca:** {row['Status_Musim']}")
-                st.markdown(f"**Sistem Pupuk:** {row['Jenis_Pupuk']}")
-                st.markdown(f"**Populasi:** {row['Jumlah Pohon']} Pohon | **Tanggal Tanam:** {row['Tanggal_Tanam']}")
-                
-                if st.button(f"🗑️ Hapus {row['Blok']}", key=f"hapus_{row['Blok']}_{idx}"):
-                    st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
-                    st.success(f"Blok {row['Blok']} telah berhasil dihapus!")
-                    st.rerun()
-                st.write("---")
+            # Menggunakan desain kartu kustom (HTML + CSS)
+            st.markdown(f"""
+                <div class="kartu-kebun">
+                    <h3 style="margin-top:0; color:#4e3629;">📍 Blok: {row['Blok']}</h3>
+                    <p style="margin:5px 0;"><b>Varietas:</b> Kopi {row['Varietas']} | <b>Cuaca:</b> {row['Status_Musim']}</p>
+                    <p style="margin:5px 0;"><b>Sistem Pupuk:</b> {row['Jenis_Pupuk']}</p>
+                    <p style="margin:5px 0; color:#666;"><b>Populasi:</b> {row['Jumlah_Pohon']} Pohon | <b>Tanggal Tanam:</b> {row['Tanggal_Tanam']}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button(f"🗑️ Hapus {row['Blok']}", key=f"hapus_{row['Blok']}_{idx}"):
+                st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
+                st.success(f"Blok {row['Blok']} telah berhasil dihapus!")
+                st.rerun()
 
 # 3. MENU: TAMPILAN JADWAL & PERINGATAN PINTAR
-elif menu == "📅 Jadwal & Peringatan":
-    st.subheader("📋 Daftar Tugas Pemeliharaan")
+elif menu == "📅 Jadwal Kerja":
+    st.markdown("<h3 style='color: #1e3f20;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
     if st.session_state.kebun_data.empty:
         st.info("Belum ada jadwal. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
@@ -75,7 +130,7 @@ elif menu == "📅 Jadwal & Peringatan":
             tgl = pd.to_datetime(row['Tanggal_Tanam'])
             musim = row['Status_Musim']
             
-            st.markdown(f"### 📍 Blok Kerja: **{blok_id}** ({row['Varietas']})")
+            st.markdown(f"#### 📍 Blok Kerja: **{blok_id}** ({row['Varietas']})")
             
             tugas_list = []
             if "Organik" in row['Jenis_Pupuk']:
@@ -98,12 +153,13 @@ elif menu == "📅 Jadwal & Peringatan":
             for nama_tugas, jeda_hari in tugas_list:
                 tgl_target = tgl + timedelta(days=jeda_hari)
                 tgl_indo = tgl_target.strftime('%d %b %Y')
-                st.error(f"🚨 **BELUM SELESAI!** \n\n **{nama_tugas}** \n\n Batas Tanggal: {tgl_indo}")
+                # Menggunakan st.error dengan modifikasi CSS bawaan untuk kartu tugas
+                st.error(f"⚠️ **TUGAS HARUS DILAKUKAN**\n\n**{nama_tugas}**\n\n📆 Target: {tgl_indo}")
             st.markdown("---")
 
 # 4. MENU: TAMPILAN KALKULATOR PUPUK OTOMATIS
 elif menu == "🧮 Kalkulator Pupuk":
-    st.subheader("🧮 Kalkulator Kebutuhan Pupuk Kebun")
+    st.markdown("<h3 style='color: #1e3f20;'>🧮 Kalkulator Kebutuhan Pupuk Kebun</h3>", unsafe_allow_html=True)
     
     if st.session_state.kebun_data.empty:
         st.info("Masukkan data kebun terlebih dahulu untuk mengaktifkan kalkulator.")
@@ -112,8 +168,8 @@ elif menu == "🧮 Kalkulator Pupuk":
         df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
         
         if not df_filter.empty:
-            jumlah_pohon = int(df_filter.iloc[0]['Jumlah_Pohon'])
-            sistem_pupuk = str(df_filter.iloc[0]['Jenis_Pupuk'])
+            jumlah_pohon = int(df_filter.iloc['Jumlah_Pohon'])
+            sistem_pupuk = str(df_filter.iloc['Jenis_Pupuk'])
             
             st.info(f"**Blok Terpilih:** {pilihan_blok} | **Populasi:** {jumlah_pohon} Pohon")
             
