@@ -137,10 +137,7 @@
 </div>
 
 <script>
-    // Inisialisasi Tanggal Hari Ini
     document.getElementById('tgl_tanam').valueAsDate = new Date();
-    
-    // Membaca Memori Harddisk HP
     let kebunData = JSON.parse(localStorage.getItem('talaga_kebun_data')) || [];
 
     function bukaTab(namaTab) {
@@ -191,3 +188,4 @@
     }
 
     function muatDataKebun() {
+        const wadah = document.getElementById('list-kebun');
