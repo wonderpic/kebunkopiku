@@ -3,32 +3,50 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 # Konfigurasi Tampilan Aplikasi HP
-st.set_page_config(page_title="KopiPlan Fix", layout="centered")
+st.set_page_config(page_title="KopiPlan Pro Fix", layout="centered")
 st.title("☕ KopiPlan Pro")
-st.caption("Aplikasi Penjadwalan & Perawatan Kebun Kopi")
+st.caption("Aplikasi Penjadwalan, Perawatan & Kalkulator Kebun Kopi")
 
-# --- DATA KEBUN KOPI ANDA (Ditulis Langsung di Sini agar Aman & Tidak Hilang) ---
-# Silakan ubah atau tambah data di dalam tanda kurung siku jika diperlukan
-raw_data = {
-    'Blok': ["Blok A", "Blok B"],
-    'Varietas': ["Arabika", "Robusta"],
-    'Jenis_Pupuk': ["Organik (Kompos/Kohe)", "Non-Organik (Kimia/NPK)"],
-    'Tanggal_Tanam': ["2026-01-01", "2026-02-15"],
-    'Jumlah_Pohon': [150, 250],
-    'Status_Musim': ["Musim Kemarau", "Musim Hujan"]
-}
+# --- SISTEM PENYIMPANAN DATA MANDIRI (ANTI-ERROR) ---
+# Membuat data awal standar jika memori aplikasi masih kosong
+if 'kebun_data' not in st.session_state:
+    st.session_state.kebun_data = pd.DataFrame([
+        {"Blok": "Blok A", "Varietas": "Arabika", "Jenis_Pupuk": "Organik (Kompos/Kohe)", "Tanggal_Tanam": datetime(2025, 1, 1).date(), "Jumlah_Pohon": 150, "Status_Musim": "Musim Kemarau"},
+        {"Blok": "Blok B", "Varietas": "Robusta", "Jenis_Pupuk": "Non-Organik (Kimia/NPK)", "Tanggal_Tanam": datetime(2025, 6, 1).date(), "Jumlah_Pohon": 200, "Status_Musim": "Musim Hujan"}
+    ])
 
-# Mengunci data menjadi tabel resmi
-st.session_state.kebun_data = pd.DataFrame(raw_data)
+# --- NAVIGASI MENU UTAMA (MOBILE FRIENDLY) ---
+menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal & Peringatan", "🧮 Kalkulator Pupuk", "🌱 Tambah Blok"], horizontal=True)
 
-# --- NAVIGASI MENU UTAMA ---
-menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal & Peringatan", "🧮 Kalkulator Pupuk"], horizontal=True)
+# 1. MENU: TAMBAH BLOK (SUDAH KEMBALI)
+if menu == "🌱 Tambah Blok":
+    st.subheader("🌱 Tambah Blok Kebun Baru")
+    with st.form("form_kebun_baru"):
+        nama_blok = st.text_input("Nama Blok Baru", placeholder="Contoh: Blok C / Lereng Barat")
+        varietas = st.selectbox("Varietas Kopi", ["Arabika", "Robusta"])
+        jenis_pupuk = st.selectbox("Metode Pemupukan Utama", ["Organik (Kompos/Kohe)", "Non-Organik (Kimia/NPK)"])
+        status_musim = st.selectbox("Kondisi Cuaca Saat Ini", ["Musim Kemarau", "Musim Hujan"])
+        tgl_tanam = st.date_input("Tanggal Tanam", datetime.now().date())
+        jml_pohon = st.number_input("Jumlah Pohon (Batang)", min_value=1, value=100)
+        submit_button = st.form_submit_button(label="⚡ Simpan Blok Baru")
 
-# 1. TAMPILAN DATA KEBUN
-if menu == "📊 Data Kebun":
-    st.subheader("Ringkasan Kebun Saat Ini")
+    if submit_button and nama_blok:
+        # Validasi agar tidak ada nama blok yang kembar
+        if nama_blok in st.session_state.kebun_data['Blok'].values:
+            st.error(f"Nama Blok '{nama_blok}' sudah terdaftar! Gunakan nama lain.")
+        else:
+            # Memasukkan data baru ke dalam tabel memori
+            new_row = pd.DataFrame([[nama_blok, varietas, jenis_pupuk, tgl_tanam, jml_pohon, status_musim]], 
+                                    columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
+            st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_row], ignore_index=True)
+            st.success(f"🎉 Sukses! {nama_blok} berhasil ditambahkan ke sistem.")
+            st.balloons() # Animasi sukses balon di layar HP
+
+# 2. MENU: TAMPILAN DATA KEBUN
+elif menu == "📊 Data Kebun":
+    st.subheader("Ringkasan Kebun")
     total_pohon = st.session_state.kebun_data['Jumlah_Pohon'].sum()
-    st.metric(label="Total Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
+    st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
     st.write("---")
     
     for idx, row in st.session_state.kebun_data.iterrows():
@@ -39,9 +57,9 @@ if menu == "📊 Data Kebun":
             st.markdown(f"**Populasi:** {row['Jumlah_Pohon']} Pohon | **Tanggal Tanam:** {row['Tanggal_Tanam']}")
             st.write("---")
 
-# 2. TAMPILAN JADWAL & PERINGATAN PINTAR
+# 3. MENU: TAMPILAN JADWAL & PERINGATAN PINTAR
 elif menu == "📅 Jadwal & Peringatan":
-    st.subheader("📋 Daftar Tugas Kebun")
+    st.subheader("📋 Daftar Tugas Pemeliharaan")
     
     for idx, row in st.session_state.kebun_data.iterrows():
         blok_id = row['Blok']
@@ -50,7 +68,7 @@ elif menu == "📅 Jadwal & Peringatan":
         
         st.markdown(f"### 📍 Blok Kerja: **{blok_id}** ({row['Varietas']})")
         
-        # Logika Tugas Otomatis
+        # Logika Penjadwalan Otomatis Berdasarkan Aturan Kopi
         tugas_list = []
         if "Organik" in row['Jenis_Pupuk']:
             tugas_list += [("🟫 Aplikasi Pupuk Dasar (Kompos)", 14), ("🟫 Pemupukan Organik Tahap 1", 120)]
@@ -69,19 +87,18 @@ elif menu == "📅 Jadwal & Peringatan":
             
         tugas_list.sort(key=lambda x: x[1])
         
-        # Memunculkan tanda bahaya merah permanen sebagai pengingat di kebun
+        # Tampilan alarm peringatan merah di lapangan
         for nama_tugas, jeda_hari in tugas_list:
             tgl_target = tgl + timedelta(days=jeda_hari)
             tgl_indo = tgl_target.strftime('%d %b %Y')
             st.error(f"🚨 **BELUM SELESAI!** \n\n **{nama_tugas}** \n\n Batas Tanggal: {tgl_indo}")
         st.markdown("---")
 
-# 3. TAMPILAN KALKULATOR PUPUK OTOMATIS
+# 4. MENU: TAMPILAN KALKULATOR PUPUK OTOMATIS
 elif menu == "🧮 Kalkulator Pupuk":
     st.subheader("🧮 Kalkulator Kebutuhan Pupuk Kebun")
     pilihan_blok = st.selectbox("Pilih Blok Kebun:", st.session_state.kebun_data['Blok'].unique())
     
-    # Memfilter data secara aman
     df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
     
     if not df_filter.empty:
