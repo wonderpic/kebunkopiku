@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talaga Hangsa KopiPlanPro</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; }
+        body { background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%); color: #2c3e50; padding: 15px; min-height: 100vh; }
+        .container { max-width: 500px; margin: 0 auto; background: transparent; }
+        
+        /* Header & Logo */
+        .header-box { text-align: center; margin-bottom: 15px; }
+        .logo-img { width: 120px; height: auto; display: block; margin: 0 auto 5px; object-fit: contain; }
+        .judul-utama { color: #1e3f20; font-weight: 800; font-size: 24px; margin-bottom: 2px; }
+        .sub-judul { color: #4a6b4c; font-weight: 500; font-size: 13px; margin-bottom: 15px; }
+        
+        /* Kotak Warning Kuning */
+        .kotak-warning { background-color: #fff3cd; color: #856404; padding: 10px 12px; border-radius: 8px; font-size: 11px; line-height: 1.4; margin-bottom: 15px; border: 1px solid #ffeeba; text-align: left; }
+        
+        /* Navigasi Tab Menu */
+        .nav-tabs { display: flex; background: #ffffff; padding: 5px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 20px; justify-content: space-between; }
+        .tab-btn { flex: 1; background: transparent; border: none; padding: 10px 5px; font-size: 12px; font-weight: bold; color: #7f8c8d; cursor: pointer; border-radius: 8px; text-align: center; }
+        .tab-btn.active { background: #1e3f20; color: #ffffff; }
+        
+        /* Konten Tab */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Form & Input */
+        .kartu-form { background: #ffffff; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 15px; }
+        .form-group { margin-bottom: 12px; text-align: left; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; color: #1e3f20; margin-bottom: 4px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; }
+        .btn-submit { width: 100%; background: #1e3f20; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        
+        /* Kartu Tampilan Data & Tugas */
+        .kartu-data { background: #ffffff; padding: 15px; border-radius: 12px; border-left: 6px solid #4e3629; box-shadow: 0 3px 10px rgba(0,0,0,0.03); margin-bottom: 12px; position: relative; }
+        .kartu-data h3 { font-size: 16px; color: #4e3629; margin-bottom: 5px; }
+        .kartu-data p { font-size: 13px; margin: 3px 0; color: #34495e; }
+        .btn-hapus { background: #d9534f; color: white; border: none; padding: 4px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; margin-top: 8px; }
+        
+        .kartu-tugas { background: #ffffff; padding: 12px; border-radius: 12px; border-left: 6px solid #d9534f; box-shadow: 0 3px 10px rgba(219,68,85,0.08); margin-bottom: 12px; }
+        .label-waktu { font-size: 11px; font-weight: bold; color: #d9534f; margin-bottom: 3px; display: block; }
+        .label-agro { font-size: 11px; font-style: italic; color: #7f8c8d; margin-bottom: 5px; display: block; }
+        
+        .info-kosong { text-align: center; color: #7f8c8d; font-size: 13px; padding: 20px; }
+        .metric-box { background: #ffffff; padding: 12px; border-radius: 10px; text-align: center; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .metric-val { font-size: 20px; font-weight: bold; color: #1e3f20; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header-box">
+        <!-- Otomatis membaca file logo.png yang satu folder dengannya -->
+        <img src="logo.png" class="logo-img" alt="Logo" onerror="this.style.display='none'">
+        <div class="judul-utama">Talaga Hangsa KopiPlanPro</div>
+        <div class="sub-judul">Asisten Digital Perawatan Kebun Kopi</div>
+    </div>
+
+    <!-- Kotak Warning -->
+    <div class="kotak-warning">
+        ⚠️ **PENTING UNTUK REKAN PETANI:** Data kebun Anda tersimpan aman dan terisolasi di memori HP Anda sendiri. Data tidak akan hilang saat halaman ditutup atau disegarkan.
+    </div>
+
+    <!-- Navigasi Menu -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="bukaTab('data')">📊 Data Kebun</button>
+        <button class="tab-btn" onclick="bukaTab('jadwal')">📅 Jadwal Kerja</button>
+        <button class="tab-btn" onclick="bukaTab('tambah')">🌱 Tambah Blok</button>
+    </div>
+
+    <!-- TAB 1: DATA KEBUN -->
+    <div id="tab-data" class="tab-content active">
+        <div class="metric-box">
+            <div style="font-size: 12px; color: #7f8c8d;">Total Semua Pohon Kopi Dikelola</div>
+            <div class="metric-val" id="total-pohon">0 Batang</div>
+        </div>
+        <div id="list-kebun"></div>
+    </div>
+
+    <!-- TAB 2: JADWAL KERJA -->
+    <div id="tab-jadwal" class="tab-content">
+        <div id="list-jadwal"></div>
+    </div>
+
+    <!-- TAB 3: TAMBAH BLOK -->
+    <div id="tab-tambah" class="tab-content">
+        <div class="kartu-form">
+            <form id="form-kebun" onsubmit="simpanKebun(event)">
+                <div class="form-group">
+                    <label>Nama Blok Baru</label>
+                    <input type="text" id="nama_blok" required placeholder="Contoh: Blok A / Lereng Barat">
+                </div>
+                <div class="form-group">
+                    <label>Lokasi Kebun (Kabupaten/Kota)</label>
+                    <input type="text" id="lokasi" required placeholder="Contoh: Garut / Temanggung">
+                </div>
+                <div class="form-group">
+                    <label>Ketinggian Lahan Kebun (mdpl)</label>
+                    <input type="number" id="ketinggian" required value="800">
+                </div>
+                <div class="form-group">
+                    <label>Varietas Kopi</label>
+                    <select id="varietas">
+                        <option value="Arabika">Arabika</option>
+                        <option value="Robusta">Robusta</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Metode Pemupukan Utama</label>
+                    <select id="jenis_pupuk">
+                        <option value="Organik (Kompos/Kohe)">Organik (Kompos/Kohe)</option>
+                        <option value="Non-Organik (Kimia/NPK)">Non-Organik (Kimia/NPK)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Kondisi Cuaca Saat Ini</label>
+                    <select id="status_musim">
+                        <option value="Musim Kemarau">Musim Kemarau</option>
+                        <option value="Musim Hujan">Musim Hujan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tanggal Tanam</label>
+                    <input type="date" id="tgl_tanam" required>
+                </div>
+                <div class="form-group">
+                    <label>Jumlah Pohon (Batang)</label>
+                    <input type="number" id="jml_pohon" required value="100" min="1">
+                </div>
+                <button type="submit" class="btn-submit">⚡ Simpan Blok Kebun</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set tanggal hari ini di form otomatis
+    document.getElementById('tgl_tanam').valueAsDate = new Date();
+
+    // Memuat data awal dari memori fisik HP petani
+    let kebunData = JSON.parse(localStorage.getItem('talaga_kebun_data')) || [];
+
+    function bukaTab(namaTab) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById('tab-' + namaTab).classList.add('active');
+        event.currentTarget.classList.add('active');
+        
+        if(namaTab === 'data') muatDataKebun();
+        if(namaTab === 'jadwal') muatJadwalKerja();
+    }
+
+    function simpanKebun(e) {
+        e.preventDefault();
+        const nama = document.getElementById('nama_blok').value;
+        
+        if (kebunData.some(k => k.Blok.toLowerCase() === nama.toLowerCase())) {
+            alert("Nama Blok '" + nama + "' sudah terdaftar!");
+            return;
+        }
+
+        const kebunBaru = {
+            Blok: nama,
+            Lokasi: document.getElementById('lokasi').value,
+            Ketinggian: parseInt(document.getElementById('ketinggian').value),
+            Varietas: document.getElementById('varietas').value,
+            Jenis_Pupuk: document.getElementById('jenis_pupuk').value,
+            Status_Musim: document.getElementById('status_musim').value,
+            Tanggal_Tanam: document.getElementById('tgl_tanam').value,
+            Jumlah_Pohon: parseInt(document.getElementById('jml_pohon').value)
+        };
+
+        kebunData.push(kebunBaru);
+        localStorage.setItem('talaga_kebun_data', JSON.stringify(kebunData));
+        alert("🎉 Sukses! " + nama + " berhasil disimpan.");
+        document.getElementById('form-kebun').reset();
+        document.getElementById('tgl_tanam').valueAsDate = new Date();
+        bukaTab('data');
+    }
+
+    function hapusKebun(index) {
+        if(confirm("Apakah Anda yakin ingin menghapus blok ini?")) {
+            kebunData.splice(index, 1);
+            localStorage.setItem('talaga_kebun_data', JSON.stringify(kebunData));
+            muatDataKebun();
+        }
+    }
+
+    function muatDataKebun() {
+        const wadah = document.getElementById('list-kebun');
