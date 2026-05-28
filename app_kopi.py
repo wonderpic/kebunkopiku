@@ -54,8 +54,10 @@ st.markdown("""
 # --- 🌟 PUSAT PENGUNCIAN DATA KEBUN ASLI ANDA (ANTI-HILANG REFRESH) 🌟 ---
 # Silakan ketik dan sesuaikan data kebun asli Anda di bawah ini agar menetap abadi di HP kawan-kawan petani
 Daftar_Kebun_Anda = [
-    {"Blok": "Blok Utama", "Lokasi": "Garut", "Ketinggian": 1200, "Varietas": "Arabika", "Jenis_Pupuk": "Organik (Kompos/Kohe)", "Tanggal_Tanam": "2025-01-01", "Jumlah_Pohon": 250, "Status_Musim": "Musim Kemarau"},
+    {"Blok": "Blok A Atas", "Lokasi": "Cianjur", "Ketinggian": 1100, "Varietas": "Arabika", "Jenis_Pupuk": "Organik (Kompos/Kohe)", "Tanggal_Tanam": "2025-03-10", "Jumlah_Pohon": 500, "Status_Musim": "Musim Hujan"},
+    {"Blok": "Blok B Lembah", "Lokasi": "Cianjur", "Ketinggian": 950, "Varietas": "Robusta", "Jenis_Pupuk": "Non-Organik (Kimia/NPK)", "Tanggal_Tanam": "2024-11-20", "Jumlah_Pohon": 800, "Status_Musim": "Musim Kemarau"}
 ]
+
 
 # Mengunci tabel agar selalu membaca data di atas secara konstan tanpa session_state
 df_kebun = pd.DataFrame(Daftar_Kebun_Anda)
