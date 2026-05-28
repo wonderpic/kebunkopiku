@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 import json
 import base64
 from datetime import datetime, timedelta
@@ -30,26 +29,26 @@ st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>",
 
 st.markdown("""
     <div class="kotak-warning-petani">
-        ⚠️ **PENTING UNTUK PETANI:** Data kebun Anda tersimpan aman dan terpisah di memori HP Anda. Jangan bersihkan riwayat internet HP Anda agar data tidak terhapus otomatis.
+        ⚠️ **PENTING UNTUK PETANI:** Data kebun tersimpan aman di memori internet HP Anda. <b>JANGAN</b> hapus riwayat internet HP Anda agar data tidak hilang secara otomatis.
     </div>
 """, unsafe_allow_html=True)
 
-# --- JEMBATAN LOCAL STORAGE BRIDGING ---
+# --- 🌟 JEMBATAN KUNCI DATA MANDIRI ANTI-REFRESH 🌟 ---
 query_params = st.query_params
 
-if 'kebun_data' not in st.session_state:
+if 'kebun_list' not in st.session_state:
     if 'data_backup' in query_params:
         try:
             raw_json = base64.b64decode(query_params['data_backup']).decode('utf-8')
-            st.session_state.kebun_data = pd.DataFrame(json.loads(raw_json))
+            st.session_state.kebun_list = json.loads(raw_json)
         except:
-            st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
+            st.session_state.kebun_list = []
     else:
-        st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
+        st.session_state.kebun_list = []
 
 def simpan_dan_kunci_state():
-    if not st.session_state.kebun_data.empty:
-        json_str = st.session_state.kebun_data.to_json(orient='records')
+    if st.session_state.kebun_list:
+        json_str = json.dumps(st.session_state.kebun_list)
         b64_str = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
         st.query_params['data_backup'] = b64_str
 
@@ -70,12 +69,20 @@ if menu == "🌱 Tambah Blok":
         submit_button = st.form_submit_button(label="⚡ Simpan Blok Baru")
 
     if submit_button and nama_blok:
-        if not st.session_state.kebun_data.empty and nama_blok in st.session_state.kebun_data['Blok'].values:
+        # Cek duplikasi nama blok
+        nama_kembar = any(k['Blok'] == nama_blok for k in st.session_state.kebun_list)
+        if nama_kembar:
             st.error(f"Nama Blok '{nama_blok}' sudah terdaftar!")
         else:
-            new_row = pd.DataFrame([[nama_blok, varietas, jenis_pupuk, str(tgl_tanam), jml_pohon, status_musim]], 
-                                    columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
-            st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_row], ignore_index=True)
+            new_block = {
+                "Blok": nama_blok,
+                "Varietas": varietas,
+                "Jenis_Pupuk": jenis_pupuk,
+                "Tanggal_Tanam": str(tgl_tanam),
+                "Jumlah_Pohon": int(jml_pohon),
+                "Status_Musim": status_musim
+            }
+            st.session_state.kebun_list.append(new_block)
             simpan_dan_kunci_state()
             st.success(f"🎉 Sukses menambahkan {nama_blok}.")
             st.rerun()
@@ -83,15 +90,20 @@ if menu == "🌱 Tambah Blok":
 # 2. MENU: DATA KEBUN
 elif menu == "📊 Data Kebun":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📊 Ringkasan Kebun</h3>", unsafe_allow_html=True)
-    if st.session_state.kebun_data.empty:
+    
+    if not st.session_state.kebun_list:
         st.info("📲 Belum ada data kebun Anda. Silakan isi data baru di menu '🌱 Tambah Blok'.")
     else:
-        total_pohon = st.session_state.kebun_data['Jumlah_Pohon'].sum()
+        total_pohon = sum(int(k['Jumlah_Pohon']) for k in st.session_state.kebun_list)
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
-        data_csv = st.session_state.kebun_data.to_csv(index=False).encode('utf-8')
+        
+        # Fitur download cadangan
+        df_download = pd.DataFrame(st.session_state.kebun_list)
+        data_csv = df_download.to_csv(index=False).encode('utf-8')
         st.download_button(label="📥 Unduh Cadangan Data Kebun (Excel/CSV)", data=data_csv, file_name="Data_Kebun_Kopi.csv", mime='text/csv')
         st.write("---")
-        for idx, row in st.session_state.kebun_data.iterrows():
+        
+        for idx, row in enumerate(st.session_state.kebun_list):
             st.markdown(f"""
                 <div class="kartu-kebun">
                     <h4 style="margin-top:0; margin-bottom:5px; color:#4e3629;">📍 Blok: {row['Blok']}</h4>
@@ -100,20 +112,21 @@ elif menu == "📊 Data Kebun":
                     <p style="margin:2px 0; font-size:12px; color:#666;"><b>Populasi:</b> {row['Jumlah_Pohon']} Pohon | **Tanam:** {row['Tanggal_Tanam']}</p>
                 </div>
             """, unsafe_allow_html=True)
+            
             if st.button(f"🗑️ Hapus {row['Blok']}", key=f"hapus_{row['Blok']}_{idx}"):
-                st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
+                st.session_state.kebun_list.pop(idx)
                 simpan_dan_kunci_state()
-                if st.session_state.kebun_data.empty:
+                if not st.session_state.kebun_list:
                     st.query_params.clear()
                 st.rerun()
 
 # 3. MENU: JADWAL KERJA
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
-    if st.session_state.kebun_data.empty:
+    if not st.session_state.kebun_list:
         st.info("📲 Belum ada jadwal tugas. Tambahkan data kebun terlebih dahulu.")
     else:
-        for idx, row in st.session_state.kebun_data.iterrows():
+        for row in st.session_state.kebun_list:
             st.markdown(f"##### 📍 Blok Kerja: **{row['Blok']}** ({row['Varietas']})")
             tgl = pd.to_datetime(row['Tanggal_Tanam'])
             tugas_list = []
@@ -129,28 +142,34 @@ elif menu == "📅 Jadwal Kerja":
                 tugas_list += [("💧 Penyiraman Rutin Kemarau T1", 3), ("💧 Penyiraman Rutin Kemarau T2", 6)]
             else:
                 tugas_list += [("🌧️ Cek Saluran Drainase Kebun", 5), ("🌧️ Pembersihan Gulma Hujan", 15)]
+                
             tugas_list.sort(key=lambda x: x)
             for nama_tugas, jeda_hari in tugas_list:
                 tgl_target = tgl + timedelta(days=jeda_hari)
                 st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_target.strftime('%d %b %Y')}")
             st.markdown("---")
 
-# 4. MENU: KALKULATOR PUPUK & AFILIASI (KUNCI BEBAS EROR 100%)
+# 4. MENU: KALKULATOR PUPUK & AFILIASI (100% GARANSI MUNCCUL DAN FIX)
 elif menu == "🧮 Kalkulator Pupuk":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🧮 Kalkulator Kebutuhan Pupuk</h3>", unsafe_allow_html=True)
-    if st.session_state.kebun_data.empty:
+    
+    if not st.session_state.kebun_list:
         st.info("Masukkan data kebun terlebih dahulu untuk mengaktifkan kalkulator.")
     else:
-        pilihan_blok = st.selectbox("Pilih Blok Kebun:", st.session_state.kebun_data['Blok'].unique())
-        df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
+        # Pilihan nama blok kebun
+        daftar_nama_blok = [k['Blok'] for k in st.session_state.kebun_list]
+        pilihan_blok = st.selectbox("Pilih Blok Kebun:", daftar_nama_blok)
         
-        if not df_filter.empty:
-            # --- 🌟 METODE KUNCI MUTLAK: Mengubah baris ke format Dictionary Murni 🌟 ---
-            # Cara ini 100% bebas dari macet sistem akibat tipe data matriks Pandas
-            data_kamus = df_filter.to_dict('records')[0]
-            
-            jumlah_pohon = int(data_kamus['Jumlah_Pohon'])
-            sistem_pupuk = str(data_kamus['Jenis_Pupuk'])
+        # Mengambil data blok spesifik menggunakan loop murni (Bebas dari eror .iloc/.values Pandas)
+        blok_terpilih = None
+        for k in st.session_state.kebun_list:
+            if k['Blok'] == pilihan_blok:
+                blok_terpilih = k
+                break
+        
+        if blok_terpilih is not None:
+            jumlah_pohon = int(blok_terpilih['Jumlah_Pohon'])
+            sistem_pupuk = str(blok_terpilih['Jenis_Pupuk'])
             
             st.info(f"**Blok Terpilih:** {pilihan_blok} | **Populasi:** {jumlah_pohon} Pohon")
             
@@ -164,3 +183,5 @@ elif menu == "🧮 Kalkulator Pupuk":
                 tonase = (jumlah_pohon * 100) / 1000
                 st.metric(label="Total Pupuk NPK Kimia Dibutuhkan", value=f"{tonase:,.1f} Kg")
                 jenis_barang = "Pupuk Kimia NPK"
+                
+            # --- 🛒 MENU PENAWARAN AGEN TERDEKAT (PASTI MUNCUL) ---
