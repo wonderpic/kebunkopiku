@@ -22,25 +22,23 @@ if os.path.exists(NAMA_LOGO):
     except:
         pass
 
-# --- KODE PENEMBUS ENKRIPSI STREAMLIT CLOUD (MEMAKSA MARGIN 0 TINGKAT TINGGI) ---
+# --- KODE DESAIN TEMA LUXURY (KOREKSI MARGIN PAS) ---
 st.markdown("""
     <style>
-    /* 1. Menghancurkan seluruh padding atas bawaan server cloud */
-    header.stAppHeader {
-        background-color: transparent !important;
-        height: 0px !important;
+    /* Menghapus padding bawaan atas secara pas agar logo TIDAK terpotong */
+    .stAppHeader {
+        display: none !important;
     }
     section.stMain .block-container {
-        padding-top: 0rem !important; /* Paksa margin atas amblas ke nol */
-        margin-top: -50px !important; /* Tarik paksa konten ke langit-langit layar */
-        z-index: 1;
+        padding-top: 1rem !important; /* Memberi ruang aman 1rem di atas logo */
+        max-width: 100% !important;
     }
     
     .stApp {
         background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%);
     }
     
-    /* 2. Mengubah Teks Judul */
+    /* Mengubah Teks Judul */
     .judul-utama {
         color: #1e3f20 !important;
         font-family: 'Helvetica Neue', sans-serif;
@@ -48,7 +46,7 @@ st.markdown("""
         text-align: center;
         margin-top: 0px !important;
         margin-bottom: 2px !important;
-        font-size: 22px;
+        font-size: 24px;
     }
     
     .sub-judul {
@@ -56,11 +54,24 @@ st.markdown("""
         font-weight: 500; 
         text-align: center; 
         margin-top: 0px;
-        margin-bottom: 10px;
-        font-size: 12px;
+        margin-bottom: 12px;
+        font-size: 13px;
     }
     
-    /* 3. Desain Kotak Kartu Informasi */
+    /* KOTAK PERINGATAN KUNING TIPIS & HEMAT TEMPAT */
+    .kotak-warning-petani {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        line-height: 1.4;
+        margin-bottom: 15px;
+        border: 1px solid #ffeeba;
+        text-align: left;
+    }
+    
+    /* Desain Kotak Kartu Informasi */
     .kartu-kebun {
         background-color: #ffffff;
         padding: 15px;
@@ -78,20 +89,23 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- BLOK HEADER (CENTER & MEPET KE ATAS) ---
+# --- BLOK HEADER (CENTER & BERJARAK AMAN) ---
 if html_src_logo:
     st.markdown(f"""
-        <div style="text-align: center; width: 100%; margin-bottom: -15px;">
-            <img src="{html_src_logo}" style="width: 85px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
+        <div style="text-align: center; width: 100%; margin-bottom: 5px; margin-top: 0px;">
+            <img src="{html_src_logo}" style="width: 95px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
         </div>
     """, unsafe_allow_html=True)
 
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
 
-# --- ⚠️ HASIL KOREKSI: PERINGATAN SUPER KECIL & HEMAT TEMPAT (MENGGUNAKAN ST.CAPTION) ---
-st.caption("⚠️ **PENTING PETANI:** Data tersimpan di HP ini. **JANGAN** hapus riwayat internet browser Anda agar data tidak hilang. Silakan klik tombol **Unduh Cadangan** di menu Data Kebun secara berkala.")
-st.write("")
+# --- KOREKSI: BOX PERINGATAN KUNING TIPIS BERHASIL DIAKTIFKAN ---
+st.markdown("""
+    <div class="kotak-warning-petani">
+        ⚠️ **PENTING PETANI:** Data tersimpan di HP ini. <b>JANGAN</b> hapus riwayat internet browser Anda agar data tidak hilang. Silakan klik tombol <b>Unduh Cadangan</b> di menu Data Kebun secara berkala.
+    </div>
+""", unsafe_allow_html=True)
 
 # --- SISTEM PENYIMPANAN DATA MANDIRI ---
 if 'kebun_data' not in st.session_state:
@@ -212,7 +226,3 @@ elif menu == "🧮 Kalkulator Pupuk":
             
             if "Organik" in sistem_pupuk:
                 total_kebutuhan = jumlah_pohon * 5.0
-                st.metric(label="Total Pupuk Kompos/Kohe Dibutuhkan", value=f"{total_kebutuhan:,.1f} Kg")
-            else:
-                total_kebutuhan_kg = (jumlah_pohon * 100) / 1000
-                st.metric(label="Total Pupuk NPK Kimia Dibutuhkan", value=f"{total_kebutuhan_kg:,.1f} Kg")
