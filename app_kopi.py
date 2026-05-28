@@ -1,11 +1,25 @@
 import streamlit as st
 import pandas as pd
+import os
+import base64
 from datetime import datetime, timedelta
 
 # Konfigurasi Tampilan Utama Halaman HP
 st.set_page_config(page_title="Talaga Hangsa KopiPlanPro", layout="centered")
 
-# --- KODE DESAIN TEMA LUXURY ---
+# --- SISTEM PROSES GAMBAR BASE64 (MENGUNCI KETAJAMAN & CENTER MUTLAK) ---
+def konversi_gambar_ke_html(jalur_gambar):
+    with open(jalur_gambar, "rb") as file_gambar:
+        data_binner = file_gambar.read()
+        format_base64 = base64.b64encode(data_binner).decode()
+    # HTML khusus untuk mengunci pixel agar jernih tajam (anti-alias / crisp-edges)
+    return f"""
+    <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0px; margin-bottom: -5px;">
+        <img src="data:image/png;base64,{format_base64}" style="width: 130px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;">
+    </div>
+    """
+
+# --- KODE DESAIN TEMA LUXURY (HEMAT SPACE) ---
 st.markdown("""
     <style>
     header.stAppHeader { background-color: transparent !important; height: 0px !important; }
@@ -19,6 +33,17 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# --- 🌟 PENAMBAHAN KEMBALI LOGO ANDA (TAJAM & CENTER) 🌟 ---
+NAMA_LOGO = "logo.png"
+if os.path.exists(NAMA_LOGO):
+    try:
+        html_logo = konversi_gambar_ke_html(NAMA_LOGO)
+        st.markdown(html_logo, unsafe_allow_html=True)
+    except:
+        st.markdown("<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ Memuat Logo... ]</p>", unsafe_allow_html=True)
+else:
+    st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' tidak ditemukan ]</p>", unsafe_allow_html=True)
+
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
 
@@ -28,7 +53,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 🌟 PENGUNCIAN DATA METODE STABLE DATASET (MENGGUNAKAN DATAFRAME LOKAL RESMI) 🌟 ---
+# --- PENGUNCIAN DATA METODE STABLE DATASET ---
 if 'kebun_data' not in st.session_state:
     st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Lokasi', 'Ketinggian', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
 
@@ -86,7 +111,7 @@ elif menu == "📊 Data Kebun":
                 st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
                 st.rerun()
 
-# 3. MENU: JADWAL KERJA (GARANSI MUNCUL BERHASIL 100%)
+# 3. MENU: JADWAL KERJA
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
@@ -99,7 +124,6 @@ elif menu == "📅 Jadwal Kerja":
             h_mdpl = int(row['Ketinggian'])
             var_kopi = row['Varietas']
             
-            # Konversi tanggal menggunakan database internal yang aman
             tgl_str = str(row['Tanggal_Tanam'])
             try:
                 tgl_obj = datetime.strptime(tgl_str, "%Y-%m-%d")
@@ -119,6 +143,7 @@ elif menu == "📅 Jadwal Kerja":
             if "Organik" in str(row['Jenis_Pupuk']):
                 tugas_list += [("🟫 Aplikasi Pupuk Dasar (Kompos)", 14), ("🟫 Pemupukan Organik Tahap 1", 120)]
             else:
+                st.write("")
                 tugas_list += [("🧪 Aplikasi Pupuk Kimia Dasar", 30), ("🧪 Pemupukan NPK Vegetatif", 90)]
             
             if var_kopi == "Arabika":
