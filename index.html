@@ -179,9 +179,9 @@
         bukaTab('data');
     }
 
-    function hapusKebun(index) {
-        if(confirm("Apakah Anda yakin ingin menghapus blok ini?")) {
-            kebunData.splice(index, 1);
+    function removeKebun(idx) {
+        if(confirm("Hapus blok kebun ini?")) {
+            kebunData.splice(idx, 1);
             localStorage.setItem('talaga_kebun_data', JSON.stringify(kebunData));
             muatDataKebun();
         }
@@ -190,3 +190,4 @@
     function muatDataKebun() {
         const wadah = document.getElementById('list-kebun');
         const totalBox = document.getElementById('total-pohon');
+        wadah.innerHTML = "";
