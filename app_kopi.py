@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 from datetime import datetime, timedelta
+from PIL import Image
 
 # Konfigurasi Tampilan Utama
 st.set_page_config(page_title="Talaga Hangsa KopiPlanPro", layout="centered")
@@ -33,6 +34,13 @@ st.markdown("""
         margin-top: -5px;
         margin-bottom: 25px;
         font-size: 14px;
+    }
+    
+    /* Memaksa elemen st.image agar berada di tengah */
+    [data-testid="stImage"] {
+        display: flex;
+        justify-content: center;
+        margin: 0 auto;
     }
     
     /* Desain Kotak Kartu Informasi */
@@ -70,18 +78,19 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- BAGIAN LOGO PENGINISIASI (DISETTING CENTER & TAJAM) ---
+# --- BAGIAN LOGO PENGINISIASI (DISETTING CENTER & TAJAM DENGAN PIL) ---
 NAMA_LOGO = "Asset 3.png"
 
 if os.path.exists(NAMA_LOGO):
-    # Menggunakan HTML khusus agar gambar tetap tajam (image-rendering auto) dan posisi center mutlak
-    st.markdown(f"""
-        <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 10px;">
-            <img src="app/static/{NAMA_LOGO}" style="width: 130px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
-        </div>
-    """, unsafe_allow_html=True)
+    try:
+        # Membuka gambar asli menggunakan PIL
+        gambar_logo = Image.open(NAMA_LOGO)
+        # Menampilkan gambar dengan layout otomatis Streamlit yang dikunci CSS ke posisi tengah
+        st.image(gambar_logo, width=130)
+    except:
+        st.markdown(f"<p style='text-align: center; color: #d9534f; font-style: italic; font-size: 12px;'>[ Gagal memproses file '{NAMA_LOGO}' ]</p>", unsafe_allow_html=True)
 else:
-    st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' tidak ditemukan ]</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' tidak ditemukan di GitHub ]</p>", unsafe_allow_html=True)
 
 # --- JUDUL APLIKASI BARU (CENTER DI BAWAH LOGO) ---
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
@@ -205,4 +214,3 @@ elif menu == "🧮 Kalkulator Pupuk":
             else:
                 total_kebutuhan_kg = (jumlah_pohon * 100) / 1000
                 st.metric(label="Total Pupuk NPK Kimia yang Diperlukan", value=f"{total_kebutuhan_kg:,.1f} Kg")
-                st.caption("💡 Dosis standar: 100 Gram pupuk NPK per pohon.")
