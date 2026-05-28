@@ -1,4 +1,4 @@
-import streamlit st
+import streamlit as st
 import pandas as pd
 import os
 import base64
@@ -110,14 +110,13 @@ elif menu == "📊 Data Kebun":
                 st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
                 st.rerun()
 
-# 3. MENU: JADWAL KERJA (URUTAN WAKTU TERDEKAT SECARA GLOBAL LINTAS BLOK)
+# 3. MENU: JADWAL KERJA (URUTAN WAKTEDU TERDEKAT GLOBAL FIX LINTAS BLOK)
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
     if st.session_state.kebun_data.empty:
         st.info("📲 Belum ada jadwal tugas. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
     else:
-        # Menampung seluruh tugas dari semua blok ke dalam satu keranjang global
         keranjang_tugas_global = []
         
         for idx, row in st.session_state.kebun_data.iterrows():
@@ -133,7 +132,6 @@ elif menu == "📅 Jadwal Kerja":
             except:
                 tgl_obj = datetime.now()
             
-            # Merangkum daftar tugas mentah berdasarkan aturan botani
             tugas_lokal = []
             if "Organik" in str(row['Jenis_Pupuk']):
                 tugas_lokal += [("🟫 Aplikasi Pupuk Dasar (Kompos)", 14), ("🟫 Pemupukan Organik Tahap 1", 120)]
@@ -150,7 +148,6 @@ elif menu == "📅 Jadwal Kerja":
             else:
                 tugas_lokal += [("🌧️ Cek Saluran Drainase Kebun", 5), ("🌧️ Pembersihan Gulma Hujan", 15)]
             
-            # Hitung tanggal target asli dan masukkan informasi agroklimate ke keranjang global
             for nama_tugas, jeda_hari in tugas_lokal:
                 tgl_target = tgl_obj + timedelta(days=jeda_hari)
                 keranjang_tugas_global.append({
@@ -162,12 +159,17 @@ elif menu == "📅 Jadwal Kerja":
                     "varietas": var_kopi
                 })
         
-        # --- 🌟 FITUR UTAMA: Urutkan seluruh tugas berdasarkan Tanggal Target Terdekat 🌟 ---
+        # Urutkan seluruh daftar tugas berdasarkan waktu pengerjaan yang paling dekat
         keranjang_tugas_global.sort(key=lambda x: x["tgl_target"])
-        
-        # Tampilkan hasil urutan waktu mendesak ke layar HP petani
         hari_ini = datetime.now()
         
         for tgs in keranjang_tugas_global:
             tgl_indo = tgs["tgl_target"].strftime('%d %b %Y')
             
+            if tgs["tgl_target"] < hari_ini:
+                label_waktu = "🚨 **SUDAH LEWAT JADWAL**"
+            else:
+                selisih = (tgs["tgl_target"] - hari_ini).days
+                label_waktu = f"⏳ **JADWAL {selisih} HARI LAGI**"
+            
+            with st.container():
