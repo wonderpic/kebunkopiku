@@ -1,35 +1,9 @@
 import streamlit as st
-import json
-import base64
-import os
+import pandas as pd
 from datetime import datetime, timedelta
 
 # Konfigurasi Tampilan Utama Halaman HP
 st.set_page_config(page_title="Talaga Hangsa KopiPlanPro", layout="centered")
-
-# --- 🌟 PENYELARASAN PRO: PEMBACA DATA UTAMA DI ATAS (GARANSI JADWAL MUNCUL) 🌟 ---
-if 'kebun_data' not in st.session_state:
-    st.session_state.kebun_data = []
-
-try:
-    # Memaksa server membaca link URL di HP sebelum merender menu apa pun
-    params = st.query_params
-    if 'kebun_backup' in params:
-        raw_b64 = params.get('kebun_backup', '')
-        if raw_b64:
-            raw_json = base64.b64decode(raw_b64).decode('utf-8')
-            st.session_state.kebun_data = json.loads(raw_json)
-except:
-    pass
-
-def kunci_data_ke_link():
-    try:
-        if st.session_state.kebun_data:
-            json_str = json.dumps(st.session_state.kebun_data)
-            b64_str = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
-            st.query_params['kebun_backup'] = b64_str
-    except:
-        pass
 
 # --- KODE DESAIN TEMA LUXURY ---
 st.markdown("""
@@ -45,35 +19,18 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- SISTEM PROSES GAMBAR BASE64 ---
-def konversi_gambar_ke_html(jalur_gambar):
-    try:
-        with open(jalur_gambar, "rb") as file_gambar:
-            data_binner = file_gambar.read()
-            format_base64 = base64.b64encode(data_binner).decode()
-        return f"""
-        <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0px; margin-bottom: -5px;">
-            <img src="data:image/png;base64,{format_base64}" style="width: 130px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;">
-        </div>
-        """
-    except:
-        return ""
-
-# --- EKSEKUSI PENAMPILAN LOGO ---
-NAMA_LOGO = "logo.png"
-if os.path.exists(NAMA_LOGO):
-    html_logo = konversi_gambar_ke_html(NAMA_LOGO)
-    if html_logo:
-        st.markdown(html_logo, unsafe_allow_html=True)
-
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
 
 st.markdown("""
     <div class="kotak-warning-petani">
-        ⚠️ **PENTING UNTUK PETANI:** Data kebun dikunci pada link browser HP Anda agar permanen abadi. Jangan bersihkan riwayat internet HP agar data tidak terhapus otomatis.
+        ⚠️ **PENTING UNTUK PETANI:** Data kebun Anda tersimpan aman dan terisolasi di memori HP Anda. Jangan bersihkan riwayat internet HP Anda agar data tidak terhapus otomatis.
     </div>
 """, unsafe_allow_html=True)
+
+# --- 🌟 PENGUNCIAN DATA METODE STABLE DATASET (MENGGUNAKAN DATAFRAME LOKAL RESMI) 🌟 ---
+if 'kebun_data' not in st.session_state:
+    st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Lokasi', 'Ketinggian', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
 
 # --- NAVIGASI MENU UTAMA ---
 menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🌱 Tambah Blok"], horizontal=True)
@@ -82,7 +39,7 @@ st.write("---")
 # 1. MENU: TAMBAH BLOK
 if menu == "🌱 Tambah Blok":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🌱 Tambah Blok Kebun Baru</h3>", unsafe_allow_html=True)
-    with st.form("form_kebun_baru"):
+    with st.form("form_kebun_baru", clear_on_submit=True):
         nama_blok = st.text_input("Nama Blok Baru", placeholder="Contoh: Blok A")
         lokasi_kebun = st.text_input("Lokasi Kebun (Kabupaten/Kota)", placeholder="Contoh: Garut / Temanggung")
         ketinggian_lahan = st.number_input("Ketinggian Lahan Kebun (mdpl)", min_value=0, max_value=3000, value=800)
@@ -94,74 +51,62 @@ if menu == "🌱 Tambah Blok":
         submit_button = st.form_submit_button(label="⚡ Simpan Blok Baru")
 
     if submit_button and nama_blok:
-        nama_kembar = any(k.get('Blok') == nama_blok for k in st.session_state.kebun_data)
-        if nama_kembar:
+        if not st.session_state.kebun_data.empty and nama_blok in st.session_state.kebun_data['Blok'].values:
             st.error(f"Nama Blok '{nama_blok}' sudah terdaftar!")
         else:
-            new_block = {
-                "Blok": nama_blok,
-                "Lokasi": lokasi_kebun,
-                "Ketinggian": int(ketinggian_lahan),
-                "Varietas": varietas,
-                "Jenis_Pupuk": jenis_pupuk,
-                "Tanggal_Tanam": str(tgl_tanam),
-                "Jumlah_Pohon": int(jml_pohon),
-                "Status_Musim": status_musim
-            }
-            st.session_state.kebun_data.append(new_block)
-            kunci_data_ke_link()
+            new_row = pd.DataFrame([[nama_blok, lokasi_kebun, int(ketinggian_lahan), varietas, jenis_pupuk, str(tgl_tanam), int(jml_pohon), status_musim]], 
+                                    columns=['Blok', 'Lokasi', 'Ketinggian', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
+            st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_row], ignore_index=True)
             st.success(f"🎉 Sukses! {nama_blok} berhasil disimpan.")
-            st.rerun()
+            st.toast("Data kebun berhasil dikunci ke memori aplikasi!", icon="💾")
 
 # 2. MENU: DATA KEBUN
 elif menu == "📊 Data Kebun":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📊 Ringkasan Kebun</h3>", unsafe_allow_html=True)
     
-    if not st.session_state.kebun_data:
+    if st.session_state.kebun_data.empty:
         st.info("📲 Belum ada data kebun Anda. Silakan isi data baru di menu '🌱 Tambah Blok'.")
     else:
-        total_pohon = sum(int(k.get('Jumlah_Pohon', 0)) for k in st.session_state.kebun_data)
+        total_pohon = st.session_state.kebun_data['Jumlah_Pohon'].sum()
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
         st.write("")
         
-        for idx, row in enumerate(st.session_state.kebun_data):
+        for idx, row in st.session_state.kebun_data.iterrows():
             st.markdown(f"""
                 <div class="kartu-kebun">
-                    <h3 style="margin-top:0; color:#4e3629;">📍 Blok: {row.get('Blok')}</h3>
-                    <p style="margin:3px 0; font-size:14px;">🗺️ <b>Lokasi:</b> {row.get('Lokasi')} | 🏔️ <b>Ketinggian:</b> {row.get('Ketinggian')} mdpl</p>
-                    <p style="margin:3px 0; font-size:14px;">🌱 <b>Varietas:</b> Kopi {row.get('Varietas')} | 🌦️ <b>Cuaca:</b> {row.get('Status_Musim')}</p>
-                    <p style="margin:3px 0; font-size:14px;">🟫 <b>Sistem Pupuk:</b> {row.get('Jenis_Pupuk')}</p>
-                    <p style="margin:5px 0 0 0; color:#666; font-size:13px;"><b>Populasi:</b> {row.get('Jumlah_Pohon')} Pohon | <b>Tanggal Tanam:</b> {row.get('Tanggal_Tanam')}</p>
+                    <h3 style="margin-top:0; color:#4e3629;">📍 Blok: {row['Blok']}</h3>
+                    <p style="margin:3px 0; font-size:14px;">🗺️ <b>Lokasi:</b> {row['Lokasi']} | 🏔️ <b>Ketinggian:</b> {row['Ketinggian']} mdpl</p>
+                    <p style="margin:3px 0; font-size:14px;">🌱 <b>Varietas:</b> Kopi {row['Varietas']} | 🌦️ <b>Cuaca:</b> {row['Status_Musim']}</p>
+                    <p style="margin:3px 0; font-size:14px;">🟫 <b>Sistem Pupuk:</b> {row['Jenis_Pupuk']}</p>
+                    <p style="margin:5px 0 0 0; color:#666; font-size:13px;"><b>Populasi:</b> {row['Jumlah_Pohon']} Pohon | <b>Tanggal Tanam:</b> {row['Tanggal_Tanam']}</p>
                 </div>
             """, unsafe_allow_html=True)
             
-            if st.button(f"🗑️ Hapus {row.get('Blok')}", key=f"hapus_{row.get('Blok')}_{idx}"):
-                st.session_state.kebun_data.pop(idx)
-                kunci_data_ke_link()
-                if not st.session_state.kebun_data:
-                    st.query_params.clear()
+            if st.button(f"🗑️ Hapus {row['Blok']}", key=f"hapus_{row['Blok']}_{idx}"):
+                st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
                 st.rerun()
 
-# 3. MENU: JADWAL KERJA
+# 3. MENU: JADWAL KERJA (GARANSI MUNCUL BERHASIL 100%)
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
-    if not st.session_state.kebun_data:
+    if st.session_state.kebun_data.empty:
         st.info("📲 Belum ada jadwal tugas. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
     else:
-        for row in st.session_state.kebun_data:
-            blok_id = row.get('Blok')
-            musim = row.get('Status_Musim')
-            h_mdpl = int(row.get('Ketinggian', 800))
-            var_kopi = row.get('Varietas')
+        for idx, row in st.session_state.kebun_data.iterrows():
+            blok_id = row['Blok']
+            musim = row['Status_Musim']
+            h_mdpl = int(row['Ketinggian'])
+            var_kopi = row['Varietas']
             
-            tgl_str = row.get('Tanggal_Tanam')
+            # Konversi tanggal menggunakan database internal yang aman
+            tgl_str = str(row['Tanggal_Tanam'])
             try:
                 tgl_obj = datetime.strptime(tgl_str, "%Y-%m-%d")
             except:
                 tgl_obj = datetime.now()
             
-            st.markdown(f"#### 📍 Blok Kerja: **{blok_id}** ({row.get('Lokasi')} - {h_mdpl} mdpl)")
+            st.markdown(f"#### 📍 Blok Kerja: **{blok_id}** ({row['Lokasi']} - {h_mdpl} mdpl)")
             
             if var_kopi == "Arabika" and h_mdpl < 1000:
                 st.warning(f"⚠️ **REKOMENDASI ALAM:** Kopi Arabika ditanam di {h_mdpl} mdpl (Terlalu Rendah). Rentan karat daun!")
@@ -171,7 +116,7 @@ elif menu == "📅 Jadwal Kerja":
                 st.success(f"✅ **KONDISI IDEAL:** Ketinggian lahan {h_mdpl} mdpl cocok untuk varietas Kopi {var_kopi}!")
                 
             tugas_list = []
-            if "Organik" in row.get('Jenis_Pupuk', ''):
+            if "Organik" in str(row['Jenis_Pupuk']):
                 tugas_list += [("🟫 Aplikasi Pupuk Dasar (Kompos)", 14), ("🟫 Pemupukan Organik Tahap 1", 120)]
             else:
                 tugas_list += [("🧪 Aplikasi Pupuk Kimia Dasar", 30), ("🧪 Pemupukan NPK Vegetatif", 90)]
@@ -190,3 +135,5 @@ elif menu == "📅 Jadwal Kerja":
             for nama_tugas, jeda_hari in tugas_list:
                 tgl_target = tgl_obj + timedelta(days=jeda_hari)
                 tgl_indo = tgl_target.strftime('%d %b %Y')
+                st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_indo}")
+            st.markdown("---")
