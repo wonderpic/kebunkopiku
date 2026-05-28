@@ -204,7 +204,7 @@ elif menu == "📅 Jadwal Kerja":
                 st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_indo}")
             st.markdown("---")
 
-# 4. MENU: TAMPILAN KALKULATOR (DENGAN KOREKSI BUG SINTAKS ILOC)
+# 4. MENU: TAMPILAN KALKULATOR (SUDAH KOREKSI PIL] DENGAN INDEX NOL)
 elif menu == "🧮 Kalkulator Pupuk":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🧮 Kalkulator Kebutuhan Pupuk</h3>", unsafe_allow_html=True)
     
@@ -215,7 +215,7 @@ elif menu == "🧮 Kalkulator Pupuk":
         df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
         
         if not df_filter.empty:
-            # --- PERBAIKAN UTAMA: Menggunakan indeks .iloc[0] dengan benar ---
+            # --- PERBAIKAN MUTLAK SINTAKS: Menambahkan index [0] agar kode di bawahnya terbaca ---
             jumlah_pohon = int(df_filter['Jumlah_Pohon'].iloc[0])
             sistem_pupuk = str(df_filter['Jenis_Pupuk'].iloc[0])
             
@@ -228,4 +228,3 @@ elif menu == "🧮 Kalkulator Pupuk":
             if "Organik" in sistem_pupuk:
                 tonase_pesanan = jumlah_pohon * 5.0
                 st.metric(label="Total Pupuk Kompos/Kohe Dibutuhkan", value=f"{tonase_pesanan:,.1f} Kg")
-                jenis_barang = "Pupuk Organik Kompos"
