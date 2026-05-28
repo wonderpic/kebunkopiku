@@ -106,8 +106,8 @@ st.markdown("""
 if 'kebun_data' not in st.session_state:
     st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
 
-# --- NAVIGASI MENU UTAMA ---
-menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🧮 Kalkulator Pupuk", "🌱 Tambah Blok"], horizontal=True)
+# --- NAVIGASI MENU UTAMA (SEKARANG HANYA 3 MENU SAJA) ---
+menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🌱 Tambah Blok"], horizontal=True)
 st.write("---")
 
 # 1. MENU: TAMBAH BLOK
@@ -195,18 +195,3 @@ elif menu == "📅 Jadwal Kerja":
                 tgl_indo = tgl_target.strftime('%d %b %Y')
                 st.error(f"⚠️ **TUGAS HARUS DILAKUKAN**\n\n**{nama_tugas}**\n\n📆 Target: {tgl_indo}")
             st.markdown("---")
-
-# 4. MENU: TAMPILAN KALKULATOR PUPUK OTOMATIS
-elif menu == "🧮 Kalkulator Pupuk":
-    st.markdown("<h3 style='color: #1e3f20;'>🧮 Kalkulator Kebutuhan Pupuk Kebun</h3>", unsafe_allow_html=True)
-    
-    if st.session_state.kebun_data.empty:
-        st.info("Masukkan data kebun terlebih dahulu untuk mengaktifkan kalkulator.")
-    else:
-        pilihan_blok = st.selectbox("Pilih Blok Kebun:", st.session_state.kebun_data['Blok'].unique())
-        df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
-        
-        if not df_filter.empty:
-            jumlah_pohon = int(df_filter['Jumlah_Pohon'].values[0])
-            sistem_pupuk = str(df_filter['Jenis_Pupuk'].values[0])
-            
