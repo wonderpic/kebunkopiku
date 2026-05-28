@@ -14,7 +14,6 @@ def konversi_gambar_ke_html(jalur_gambar):
         format_base64 = base64.b64encode(data_binner).decode()
     return f"data:image/png;base64,{format_base64}"
 
-# --- AMBIL DATA LOGO JIKA ADA ---
 NAMA_LOGO = "logo.png"
 html_src_logo = ""
 if os.path.exists(NAMA_LOGO):
@@ -23,54 +22,45 @@ if os.path.exists(NAMA_LOGO):
     except:
         pass
 
-# --- KODE DESAIN TEMA (MEMAKSA PENYUSUTAN TOTAL MARGIN & TEKS) ---
+# --- KODE PENEMBUS ENKRIPSI STREAMLIT CLOUD (MEMAKSA MARGIN 0 TINGKAT TINGGI) ---
 st.markdown("""
     <style>
-    /* 1. Paksa hapus margin putih paling atas dari server Streamlit */
-    .stAppHeader {
-        display: none !important;
+    /* 1. Menghancurkan seluruh padding atas bawaan server cloud */
+    header.stAppHeader {
+        background-color: transparent !important;
+        height: 0px !important;
     }
-    .block-container {
-        padding-top: 0.5rem !important;
-        padding-bottom: 0.5rem !important;
-        max-width: 100% !important;
-    }
-    div[data-testid="stDecoration"] {
-        display: none !important;
-    }
-    div[data-testid="stVerticalBlock"] > div {
-        padding-top: 0px !important;
-        padding-bottom: 0px !important;
+    section.stMain .block-container {
+        padding-top: 0rem !important; /* Paksa margin atas amblas ke nol */
+        margin-top: -50px !important; /* Tarik paksa konten ke langit-langit layar */
+        z-index: 1;
     }
     
     .stApp {
         background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%);
     }
     
-    /* 2. Desain Kotak Kartu Informasi */
-    .block-container .element-container div.stAlert {
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        border: none;
+    /* 2. Mengubah Teks Judul */
+    .judul-utama {
+        color: #1e3f20 !important;
+        font-family: 'Helvetica Neue', sans-serif;
+        font-weight: 800;
+        text-align: center;
+        margin-top: 0px !important;
+        margin-bottom: 2px !important;
+        font-size: 22px;
     }
     
-    /* Kartu Peringatan Tugas Belum Selesai */
-    div[data-testid="stNotification"] {
-        border-left: 5px solid #d9534f !important;
-        background-color: #ffffff !important;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(217, 83, 79, 0.08);
+    .sub-judul {
+        color: #4a6b4c; 
+        font-weight: 500; 
+        text-align: center; 
+        margin-top: 0px;
+        margin-bottom: 10px;
+        font-size: 12px;
     }
     
-    /* Percantik Tombol Menu Navigasi */
-    div[data-testid="stRadio"] > div {
-        background-color: #ffffff;
-        padding: 8px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-    }
-    
-    /* Kotak Kontainer Custom untuk Data Kebun */
+    /* 3. Desain Kotak Kartu Informasi */
     .kartu-kebun {
         background-color: #ffffff;
         padding: 15px;
@@ -79,26 +69,29 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         margin-bottom: 15px;
     }
+    div[data-testid="stRadio"] > div {
+        background-color: #ffffff;
+        padding: 8px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 🛠️ BLOK HEADER KUSTOM MANDIRI (MENGUNCI MARGIN & TEKS PERINGATAN TIPIS) ---
-# Di sini kita menyatukan Logo, Judul, dan Teks Peringatan Kecil dalam satu baris HTML terpadu agar hemat tempat
-html_logo_tag = f'<img src="{html_src_logo}" style="width: 90px; height: auto; margin-bottom: 5px; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">' if html_src_logo else ''
-
-st.markdown(f"""
-    <div style="text-align: center; width: 100%; margin-top: 0px; padding-top: 0px;">
-        {html_logo_tag}
-        <h1 style="color: #1e3f20 !important; font-family: 'Helvetica Neue', sans-serif; font-weight: 800; text-align: center; margin: 2px 0 !important; font-size: 22px; padding: 0;">Talaga Hangsa KopiPlanPro</h1>
-        <p style="color: #4a6b4c; font-weight: 500; text-align: center; margin: 0 0 10px 0 !important; font-size: 12px; padding: 0;">Asisten Digital Manajemen Perawatan Kebun Kopi</p>
-        
-        <!-- HASIL KOREKSI: Kotak Peringatan Sangat Tipis, Hemat Tempat, Huruf Kecil -->
-        <div style="background-color: #fff3cd; color: #856404; padding: 6px 10px; border-radius: 6px; font-size: 10.5px; line-height: 1.3; text-align: left; margin-bottom: 12px; border: 1px solid #ffeeba;">
-            <b>⚠️ PENTING PETANI:</b> Data tersimpan di HP ini. <b>JANGAN</b> hapus riwayat internet (Cache/Cookies) HP agar data tidak hilang. Unduh cadangan berkala di menu Data Kebun.
+# --- BLOK HEADER (CENTER & MEPET KE ATAS) ---
+if html_src_logo:
+    st.markdown(f"""
+        <div style="text-align: center; width: 100%; margin-bottom: -15px;">
+            <img src="{html_src_logo}" style="width: 85px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
         </div>
-    </div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
+st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
+
+# --- ⚠️ HASIL KOREKSI: PERINGATAN SUPER KECIL & HEMAT TEMPAT (MENGGUNAKAN ST.CAPTION) ---
+st.caption("⚠️ **PENTING PETANI:** Data tersimpan di HP ini. **JANGAN** hapus riwayat internet browser Anda agar data tidak hilang. Silakan klik tombol **Unduh Cadangan** di menu Data Kebun secara berkala.")
+st.write("")
 
 # --- SISTEM PENYIMPANAN DATA MANDIRI ---
 if 'kebun_data' not in st.session_state:
@@ -209,3 +202,17 @@ elif menu == "🧮 Kalkulator Pupuk":
         st.info("Masukkan data kebun terlebih dahulu untuk mengaktifkan kalkulator.")
     else:
         pilihan_blok = st.selectbox("Pilih Blok Kebun:", st.session_state.kebun_data['Blok'].unique())
+        df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
+        
+        if not df_filter.empty:
+            jumlah_pohon = int(df_filter.iloc['Jumlah_Pohon'])
+            sistem_pupuk = str(df_filter.iloc['Jenis_Pupuk'])
+            
+            st.info(f"**Blok Terpilih:** {pilihan_blok} | **Populasi:** {jumlah_pohon} Pohon")
+            
+            if "Organik" in sistem_pupuk:
+                total_kebutuhan = jumlah_pohon * 5.0
+                st.metric(label="Total Pupuk Kompos/Kohe Dibutuhkan", value=f"{total_kebutuhan:,.1f} Kg")
+            else:
+                total_kebutuhan_kg = (jumlah_pohon * 100) / 1000
+                st.metric(label="Total Pupuk NPK Kimia Dibutuhkan", value=f"{total_kebutuhan_kg:,.1f} Kg")
