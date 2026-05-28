@@ -151,34 +151,23 @@ elif menu == "📊 Data Kebun":
                 st.success(f"Blok {row['Blok']} telah berhasil dihapus!")
                 st.rerun()
 
-# 3. MENU: JADWAL KERJA (🌟 DIURUTKAN BERDASARKAN TANGGAL TERDEKAT DENGAN FIX ILOC/VALUES 🌟)
+# 3. MENU: JADWAL KERJA (🌟 DIURUTKAN BERDASARKAN WAKTU TERDEKAT SECARA GLOBAL LINTAS BLOK 🌟)
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
     if st.session_state.kebun_data.empty:
-        st.info("Belum ada jadwal. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
+        st.info("📲 Belum ada jadwal tugas. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
     else:
-        # 1. Kumpulkan semua tugas lintas blok ke satu wadah tunggal
-        semua_tugas_gabungan = []
+        # Menampung seluruh tugas global ke dalam wadah list DataFrame kustom
+        daftar_tugas_gabungan = []
         
-        # Konversi ke dict records agar aman dibaca looping murni
-        daftar_kebun_aman = st.session_state.kebun_data.to_dict('records')
-        
-        for row in daftar_kebun_aman:
+        for idx, row in st.session_state.kebun_data.iterrows():
             blok_id = row['Blok']
             musim = row['Status_Musim']
             var_kopi = row['Varietas']
+            # Fungsi konversi tanggal murni Pandas untuk menjamin kecocokan tipe data kalender
+            tgl = pd.to_datetime(row['Tanggal_Tanam'])
             
-            # Parsing tanggal tanam dari DataFrame secara aman
-            tgl_tanam_raw = row['Tanggal_Tanam']
-            if isinstance(tgl_tanam_raw, str):
-                try:
-                    tgl = datetime.strptime(tgl_tanam_raw.split()[0], "%Y-%m-%d")
-                except:
-                    tgl = datetime.now()
-            else:
-                tgl = pd.to_datetime(tgl_tanam_raw)
-                
             tugas_lokal = []
             if "Organik" in str(row['Jenis_Pupuk']):
                 tugas_lokal += [("🟫 Aplikasi Pupuk Dasar (Kompos)", 14), ("🟫 Pemupukan Organik Tahap 1", 120)]
@@ -195,20 +184,21 @@ elif menu == "📅 Jadwal Kerja":
             else:
                 tugas_lokal += [("🌧️ Cek Saluran Drainase Kebun", 5), ("🌧️ Pembersihan Gulma Hujan", 15)]
                 
-            # Hitung target tanggal eksak dan simpan identitas bloknya
             for nama_tugas, jeda_hari in tugas_lokal:
                 tgl_target = tgl + timedelta(days=jeda_hari)
-                semua_tugas_gabungan.append({
-                    "blok": blok_id,
-                    "varietas": var_kopi,
-                    "tugas": nama_tugas,
-                    "target_waktu": tgl_target
+                daftar_tugas_gabungan.append({
+                    "Blok": blok_id,
+                    "Varietas": var_kopi,
+                    "Tugas": nama_tugas,
+                    "Tanggal_Target": tgl_target
                 })
         
-        # 2. PROSES UTAMA: Urutkan wadah tugas berdasarkan kunci tanggal terdekat
-        semua_tugas_gabungan.sort(key=lambda x: x["target_waktu"])
+        # 2. PROSES UTAMA: Mengubah list menjadi DataFrame dan mengurutkannya menggunakan fungsi resmi Pandas
+        df_tugas_global = pd.DataFrame(daftar_tugas_gabungan)
+        df_tugas_global = df_tugas_global.sort_values(by="Tanggal_Target", ascending=True)
         
-        # 3. Tampilkan secara berurutan ke layar HP petani
-        for tgs in semua_tugas_gabungan:
-            tgl_cetak = tgs["target_waktu"].strftime('%d %b %Y')
-            st.error(f"📍 **Blok:** {tgs['blok']} ({tgs['varietas']})\n\n⚠️ **TUGAS:** {tgs['tugas']}\n\n📆 **Target:** {tgl_cetak}")
+        # 3. Tampilkan hasil urutan waktu mendesak ke HP petani
+        for _, tgs in df_tugas_global.iterrows():
+            tgl_indo = tgs["Tanggal_Target"].strftime('%d %b %Y')
+            st.error(f"📍 **Blok:** {tgs['Blok']} ({tgs['Varietas']})\n\n⚠️ **TUGAS:** {tgs['Tugas']}\n\n📆 **Target:** {tgl_indo}")
+            st.markdown("<div style='margin-bottom:10px;'></div>", unsafe_allow_html=True)
