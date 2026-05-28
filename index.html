@@ -27,14 +27,14 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        /* Formulir */
+        /* Formulir Input */
         .kartu-form { background: #ffffff; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 15px; }
         .form-group { margin-bottom: 12px; text-align: left; }
         .form-group label { display: block; font-size: 12px; font-weight: bold; color: #1e3f20; margin-bottom: 4px; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; }
         .btn-submit { width: 100%; background: #1e3f20; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 5px; }
         
-        /* Tampilan Ringkasan & Tugas */
+        /* Kartu Ringkasan & Tugas */
         .kartu-data { background: #ffffff; padding: 15px; border-radius: 12px; border-left: 6px solid #4e3629; box-shadow: 0 3px 10px rgba(0,0,0,0.03); margin-bottom: 12px; text-align: left; }
         .kartu-data h3 { font-size: 16px; color: #4e3629; margin-bottom: 5px; }
         .kartu-data p { font-size: 13px; margin: 3px 0; color: #34495e; }
@@ -64,7 +64,7 @@
         ⚠️ <b>PENTING UNTUK REKAN PETANI:</b> Data kebun Anda tersimpan aman dan terisolasi di memori HP Anda sendiri. Data tidak akan hilang saat halaman ditutup atau disegarkan.
     </div>
 
-    <!-- Navigation Tab Buttons -->
+    <!-- Navigasi Menu Tab -->
     <div class="nav-tabs">
         <button class="tab-btn active" id="btn-data" onclick="bukaTab('data')">📊 Data Kebun</button>
         <button class="tab-btn" id="btn-jadwal" onclick="bukaTab('jadwal')">📅 Jadwal Kerja</button>
@@ -137,18 +137,16 @@
 </div>
 
 <script>
-    // Set Tanggal Default
+    // Set Otomatis Tanggal Hari Ini
     document.getElementById('tgl_tanam').valueAsDate = new Date();
     
-    // Inisialisasi Storage Fisik HP Petani
+    // Inisialisasi Database Memori HP
     let kebunData = JSON.parse(localStorage.getItem('talaga_kebun_data')) || [];
 
     function bukaTab(namaTab) {
-        // Menyembunyikan seluruh tab konten dan mematikan status aktif tombol
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         
-        // Membuka tab konten terpilih murni menggunakan ID (Bebas Crash Event Browser)
         document.getElementById('tab-' + namaTab).classList.add('active');
         document.getElementById('btn-' + namaTab).classList.add('active');
         
@@ -186,3 +184,9 @@
 
     function hapusKebun(index) {
         if(confirm("Apakah Anda yakin ingin menghapus blok ini?")) {
+            kebunData.splice(index, 1);
+            localStorage.setItem('talaga_kebun_data', JSON.stringify(kebunData));
+            muatDataKebun();
+        }
+    }
+
