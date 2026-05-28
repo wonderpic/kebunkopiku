@@ -51,7 +51,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- SISTEM DATA MANDIRI STABIL ---
+# --- SISTEM DATA MANDIRI STABIL MURNI ---
 if 'kebun_data' not in st.session_state:
     st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Lokasi', 'Ketinggian', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
 
@@ -93,13 +93,13 @@ elif menu == "📊 Data Kebun":
         total_pohon = st.session_state.kebun_data['Jumlah_Pohon'].sum()
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{int(total_pohon)} Batang")
         
-        # Fitur unduh laporan resmi Excel/CSV bawaan Pandas murni yang kebal reset
+        # Fitur unduh laporan resmi Excel/CSV
         df_download = st.session_state.kebun_data
         data_csv = df_download.to_csv(index=False).encode('utf-8')
         st.download_button(label="📥 Unduh Cadangan Data Kebun (Excel/CSV)", data=data_csv, file_name="Data_Kebun_Kopi_TalagaHangsa.csv", mime='text/csv')
         st.write("---")
         
-        for idx, row in st.session_state.kebun_data.get_container if hasattr(st.session_state.kebun_data, 'get_container') else st.session_state.kebun_data.iterrows():
+        for idx, row in st.session_state.kebun_data.iterrows():
             st.markdown(f"""
                 <div class="kartu-kebun">
                     <h3 style="margin-top:0; color:#4e3629;">📍 Blok: {row['Blok']}</h3>
@@ -167,3 +167,4 @@ elif menu == "📅 Jadwal Kerja":
             
             with st.container():
                 st.markdown(f"📍 **Blok:** {tgs['blok']} ({tgs['lokasi']} - {tgs['mdpl']} mdpl)")
+                if tgs["varietas"] == "Arabika" and tgs["mdpl"] < 1000:
