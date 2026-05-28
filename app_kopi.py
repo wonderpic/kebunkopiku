@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
+import base64
 from datetime import datetime, timedelta
 
 # Konfigurasi Tampilan Utama Halaman HP
@@ -20,8 +21,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- BLOK LOGO JALUR INTERNET AMAN (ANTI-BLUR) ---
-# Menggunakan logo cadangan server awan jika file lokal Anda tidak terbaca
+# --- BLOK LOGO ---
 URL_LOGO_CADANGAN = "https://githubusercontent.com"
 st.markdown(f"""<div style="text-align: center; width: 100%; margin-bottom: 5px;"><img src="{URL_LOGO_CADANGAN}" style="width: 70px; height: auto;"></div>""", unsafe_allow_html=True)
 
@@ -34,14 +34,12 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 🌟 JEMBATAN LOCAL STORAGE BRIDGING (SISTEM KUNCI HP PETANI) 🌟 ---
-# Menggunakan trik query params sebagai memori penyimpanan lokal browser yang kebal refresh
+# --- JEMBATAN LOCAL STORAGE BRIDGING ---
 query_params = st.query_params
 
 if 'kebun_data' not in st.session_state:
     if 'data_backup' in query_params:
         try:
-            # Memulihkan data yang tersimpan dari link url otomatis browser
             raw_json = base64.b64decode(query_params['data_backup']).decode('utf-8')
             st.session_state.kebun_data = pd.DataFrame(json.loads(raw_json))
         except:
@@ -49,7 +47,6 @@ if 'kebun_data' not in st.session_state:
     else:
         st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
 
-# Fungsi pembantu untuk mengunci data ke link browser HP secara real-time
 def simpan_dan_kunci_state():
     if not st.session_state.kebun_data.empty:
         json_str = st.session_state.kebun_data.to_json(orient='records')
@@ -60,7 +57,7 @@ def simpan_dan_kunci_state():
 menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🧮 Kalkulator Pupuk", "🌱 Tambah Blok"], horizontal=True)
 st.write("---")
 
-# 1. MENU: TAMBAH BLOK (BERSIH MANDIRI)
+# 1. MENU: TAMBAH BLOK
 if menu == "🌱 Tambah Blok":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🌱 Tambah Blok Kebun Baru</h3>", unsafe_allow_html=True)
     with st.form("form_kebun_baru"):
@@ -86,17 +83,14 @@ if menu == "🌱 Tambah Blok":
 # 2. MENU: DATA KEBUN
 elif menu == "📊 Data Kebun":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📊 Ringkasan Kebun</h3>", unsafe_allow_html=True)
-    
     if st.session_state.kebun_data.empty:
         st.info("📲 Belum ada data kebun Anda. Silakan isi data baru di menu '🌱 Tambah Blok'.")
     else:
         total_pohon = st.session_state.kebun_data['Jumlah_Pohon'].sum()
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
-        
         data_csv = st.session_state.kebun_data.to_csv(index=False).encode('utf-8')
         st.download_button(label="📥 Unduh Cadangan Data Kebun (Excel/CSV)", data=data_csv, file_name="Data_Kebun_Kopi.csv", mime='text/csv')
         st.write("---")
-        
         for idx, row in st.session_state.kebun_data.iterrows():
             st.markdown(f"""
                 <div class="kartu-kebun">
@@ -106,7 +100,6 @@ elif menu == "📊 Data Kebun":
                     <p style="margin:2px 0; font-size:12px; color:#666;"><b>Populasi:</b> {row['Jumlah_Pohon']} Pohon | **Tanam:** {row['Tanggal_Tanam']}</p>
                 </div>
             """, unsafe_allow_html=True)
-            
             if st.button(f"🗑️ Hapus {row['Blok']}", key=f"hapus_{row['Blok']}_{idx}"):
                 st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
                 simpan_dan_kunci_state()
@@ -136,14 +129,13 @@ elif menu == "📅 Jadwal Kerja":
                 tugas_list += [("💧 Penyiraman Rutin Kemarau T1", 3), ("💧 Penyiraman Rutin Kemarau T2", 6)]
             else:
                 tugas_list += [("🌧️ Cek Saluran Drainase Kebun", 5), ("🌧️ Pembersihan Gulma Hujan", 15)]
-                
             tugas_list.sort(key=lambda x: x)
             for nama_tugas, jeda_hari in tugas_list:
                 tgl_target = tgl + timedelta(days=jeda_hari)
                 st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_target.strftime('%d %b %Y')}")
             st.markdown("---")
 
-# 4. MENU: KALKULATOR PUPUK & PENAWARAN (100% SINKRON & BEBAS ERROR)
+# 4. MENU: KALKULATOR PUPUK & AFILIASI (KUNCI BEBAS EROR 100%)
 elif menu == "🧮 Kalkulator Pupuk":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🧮 Kalkulator Kebutuhan Pupuk</h3>", unsafe_allow_html=True)
     if st.session_state.kebun_data.empty:
@@ -153,11 +145,22 @@ elif menu == "🧮 Kalkulator Pupuk":
         df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
         
         if not df_filter.empty:
-            # Menggunakan teknik ekstraksi murni baris indeks ke-0 agar bebas dari crash data
-            jumlah_pohon = int(df_filter['Jumlah_Pohon'].values[0])
-            sistem_pupuk = str(df_filter['Jenis_Pupuk'].values[0])
+            # --- 🌟 METODE KUNCI MUTLAK: Mengubah baris ke format Dictionary Murni 🌟 ---
+            # Cara ini 100% bebas dari macet sistem akibat tipe data matriks Pandas
+            data_kamus = df_filter.to_dict('records')[0]
+            
+            jumlah_pohon = int(data_kamus['Jumlah_Pohon'])
+            sistem_pupuk = str(data_kamus['Jenis_Pupuk'])
+            
             st.info(f"**Blok Terpilih:** {pilihan_blok} | **Populasi:** {jumlah_pohon} Pohon")
             
+            tonase = 0.0
+            jenis_barang = ""
             if "Organik" in sistem_pupuk:
                 tonase = jumlah_pohon * 5.0
                 st.metric(label="Total Pupuk Kompos/Kohe Dibutuhkan", value=f"{tonase:,.1f} Kg")
+                jenis_barang = "Pupuk Organik Kompos"
+            else:
+                tonase = (jumlah_pohon * 100) / 1000
+                st.metric(label="Total Pupuk NPK Kimia Dibutuhkan", value=f"{tonase:,.1f} Kg")
+                jenis_barang = "Pupuk Kimia NPK"
