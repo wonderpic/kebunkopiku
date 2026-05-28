@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 import json
 import base64
 import os
@@ -52,7 +51,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 🌟 SISTEM SINKRONISASI LINK BRIDGING (KEBAL REFRESH) 🌟 ---
+# --- SISTEM SINKRONISASI LINK BRIDGING (ANTI-HILANG REFRESH) ---
 if 'kebun_list' not in st.session_state:
     st.session_state.kebun_list = []
 
@@ -79,11 +78,13 @@ def kunci_data_ke_link():
 menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🌱 Tambah Blok"], horizontal=True)
 st.write("---")
 
-# 1. MENU: TAMBAH BLOK
+# 1. MENU: TAMBAH BLOK (LENGKAP DENGAN LOKASI & KETINGGIAN MDPL)
 if menu == "🌱 Tambah Blok":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🌱 Tambah Blok Kebun Baru</h3>", unsafe_allow_html=True)
     with st.form("form_kebun_baru", clear_on_submit=True):
         nama_blok = st.text_input("Nama Blok Baru", placeholder="Contoh: Blok A")
+        lokasi_kebun = st.text_input("Lokasi Kebun (Kabupaten/Kota)", placeholder="Contoh: Garut / Temanggung")
+        ketinggian_lahan = st.number_input("Ketinggian Lahan Kebun (mdpl)", min_value=0, max_value=3000, value=800)
         varietas = st.selectbox("Varietas Kopi", ["Arabika", "Robusta"])
         jenis_pupuk = st.selectbox("Metode Pemupukan Utama", ["Organik (Kompos/Kohe)", "Non-Organik (Kimia/NPK)"])
         status_musim = st.selectbox("Kondisi Cuaca Saat Ini", ["Musim Kemarau", "Musim Hujan"])
@@ -98,6 +99,8 @@ if menu == "🌱 Tambah Blok":
         else:
             new_block = {
                 "Blok": nama_blok,
+                "Lokasi": lokasi_kebun,
+                "Ketinggian": int(ketinggian_lahan),
                 "Varietas": varietas,
                 "Jenis_Pupuk": jenis_pupuk,
                 "Tanggal_Tanam": str(tgl_tanam),
@@ -124,6 +127,7 @@ elif menu == "📊 Data Kebun":
             st.markdown(f"""
                 <div class="kartu-kebun">
                     <h3 style="margin-top:0; color:#4e3629;">📍 Blok: {row.get('Blok')}</h3>
+                    <p style="margin:3px 0; font-size:14px;">🗺️ <b>Lokasi:</b> {row.get('Lokasi')} | 🏔️ <b>Ketinggian:</b> {row.get('Ketinggian')} mdpl</p>
                     <p style="margin:3px 0; font-size:14px;">🌱 <b>Varietas:</b> Kopi {row.get('Varietas')} | 🌦️ <b>Cuaca:</b> {row.get('Status_Musim')}</p>
                     <p style="margin:3px 0; font-size:14px;">🟫 <b>Sistem Pupuk:</b> {row.get('Jenis_Pupuk')}</p>
                     <p style="margin:5px 0 0 0; color:#666; font-size:13px;"><b>Populasi:</b> {row.get('Jumlah_Pohon')} Pohon | <b>Tanggal Tanam:</b> {row.get('Tanggal_Tanam')}</p>
@@ -137,7 +141,7 @@ elif menu == "📊 Data Kebun":
                     st.query_params.clear()
                 st.rerun()
 
-# 3. MENU: JADWAL KERJA (GABUNGAN URUTAN TERDEKAT GLOBAL)
+# 3. MENU: JADWAL KERJA (GABUNGAN URUTAN TERDEKAT GLOBAL LINTAS BLOK DENGAN AGROKLIMAT)
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
@@ -148,7 +152,9 @@ elif menu == "📅 Jadwal Kerja":
         
         for row in st.session_state.kebun_list:
             blok_id = row.get('Blok')
+            lokasi = row.get('Lokasi')
             musim = row.get('Status_Musim')
+            h_mdpl = int(row.get('Ketinggian', 800))
             var_kopi = row.get('Varietas')
             
             tgl_str = row.get('Tanggal_Tanam')
@@ -177,15 +183,16 @@ elif menu == "📅 Jadwal Kerja":
                 tgl_target = tgl_obj + timedelta(days=jeda_hari)
                 keranjang_tugas_global.append({
                     "blok": blok_id,
+                    "lokasi": lokasi,
+                    "mdpl": h_mdpl,
                     "varietas": var_kopi,
                     "tugas": nama_tugas,
                     "target_waktu": tgl_target
                 })
         
-        # Urutkan seluruh tugas berdasarkan waktu pengerjaan terdekat
+        # Urutkan seluruh tugas global berdasarkan waktu pengerjaan terdekat
         keranjang_tugas_global.sort(key=lambda x: x["target_waktu"])
         
         for tgs in keranjang_tugas_global:
             tgl_cetak = tgs["target_waktu"].strftime('%d %b %Y')
-            st.error(f"📍 **Blok:** {tgs['blok']} ({tgs['varietas']})\n\n⚠️ **TUGAS:** {tgs['tugas']}\n\n📆 **Target:** {tgl_cetak}")
-            st.markdown("---")
+            
