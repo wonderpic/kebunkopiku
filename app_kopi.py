@@ -10,7 +10,7 @@ st.caption("Sistem Data Permanen Terhubung ke Google Sheets")
 
 # --- KONEKSI GOOGLE SHEETS (Ganti dengan URL Sheets Anda) ---
 # Silakan ganti teks di bawah ini dengan URL Google Sheets yang sudah Anda copy tadi
-URL_SHEETS = "https://google.com"
+https://docs.google.com/spreadsheets/d/1rwzSaHmWu9G5rj7kgXjrzIwqgS22h4Zu-rBLltOLd_g/edit?usp=sharing
 
 # Fungsi membaca data dari Google Sheets secara langsung
 def muat_data_cloud(sheet_name):
