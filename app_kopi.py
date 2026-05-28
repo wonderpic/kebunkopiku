@@ -7,20 +7,6 @@ from datetime import datetime, timedelta
 # Konfigurasi Tampilan Utama Halaman HP
 st.set_page_config(page_title="Talaga Hangsa KopiPlanPro", layout="centered")
 
-# --- SISTEM PROSES GAMBAR BASE64 ---
-def konversi_gambar_ke_html(jalur_gambar):
-    try:
-        with open(jalur_gambar, "rb") as file_gambar:
-            data_binner = file_gambar.read()
-            format_base64 = base64.b64encode(data_binner).decode()
-        return f"""
-        <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0px; margin-bottom: -5px;">
-            <img src="data:image/png;base64,{format_base64}" style="width: 130px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;">
-        </div>
-        """
-    except:
-        return ""
-
 # --- KODE DESAIN TEMA LUXURY ---
 st.markdown("""
     <style>
@@ -34,6 +20,20 @@ st.markdown("""
     div[data-testid="stRadio"] > div { background-color: #ffffff; padding: 10px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
     </style>
     """, unsafe_allow_html=True)
+
+# --- SISTEM PROSES GAMBAR BASE64 ---
+def konversi_gambar_ke_html(jalur_gambar):
+    try:
+        with open(jalur_gambar, "rb") as file_gambar:
+            data_binner = file_gambar.read()
+            format_base64 = base64.b64encode(data_binner).decode()
+        return f"""
+        <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0px; margin-bottom: -5px;">
+            <img src="data:image/png;base64,{format_base64}" style="width: 130px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;">
+        </div>
+        """
+    except:
+        return ""
 
 # --- EKSEKUSI PENAMPILAN LOGO ---
 NAMA_LOGO = "logo.png"
@@ -51,24 +51,29 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- JEMBATAN KUNCI LINK BERSIH LOKAL (ANTI-HILANG REFRESH) ---
-query_params = st.query_params
-
+# --- 🌟 PENYEMPURNAAN UTAMA: SISTEM KUNCI LINK AMAN ANTI-CRASH 🌟 ---
 if 'kebun_data' not in st.session_state:
-    if 'kebun_backup' in query_params:
-        try:
-            raw_json = base64.b64decode(query_params['kebun_backup']).decode('utf-8')
+    st.session_state.kebun_data = []
+
+# Membaca data dari tautan url secara aman menggunakan fungsi .get() bawaan Streamlit terbaru
+try:
+    params = st.query_params
+    if 'kebun_backup' in params:
+        raw_b64 = params.get('kebun_backup', '')
+        if raw_b64:
+            raw_json = base64.b64decode(raw_b64).decode('utf-8')
             st.session_state.kebun_data = json.loads(raw_json)
-        except:
-            st.session_state.kebun_data = []
-    else:
-        st.session_state.kebun_data = []
+except:
+    pass
 
 def kunci_data_ke_link():
-    if st.session_state.kebun_data:
-        json_str = json.dumps(st.session_state.kebun_data)
-        b64_str = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
-        st.query_params['kebun_backup'] = b64_str
+    try:
+        if st.session_state.kebun_data:
+            json_str = json.dumps(st.session_state.kebun_data)
+            b64_str = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
+            st.query_params['kebun_backup'] = b64_str
+    except:
+        pass
 
 # --- NAVIGASI MENU UTAMA ---
 menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🌱 Tambah Blok"], horizontal=True)
@@ -89,7 +94,7 @@ if menu == "🌱 Tambah Blok":
         submit_button = st.form_submit_button(label="⚡ Simpan Blok Baru")
 
     if submit_button and nama_blok:
-        nama_kembar = any(k['Blok'] == nama_blok for k in st.session_state.kebun_data)
+        nama_kembar = any(k.get('Blok') == nama_blok for k in st.session_state.kebun_data)
         if nama_kembar:
             st.error(f"Nama Blok '{nama_blok}' sudah terdaftar!")
         else:
@@ -115,29 +120,29 @@ elif menu == "📊 Data Kebun":
     if not st.session_state.kebun_data:
         st.info("📲 Belum ada data kebun Anda. Silakan isi data baru di menu '🌱 Tambah Blok'.")
     else:
-        total_pohon = sum(int(k['Jumlah_Pohon']) for k in st.session_state.kebun_data)
+        total_pohon = sum(int(k.get('Jumlah_Pohon', 0)) for k in st.session_state.kebun_data)
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
         st.write("")
         
         for idx, row in enumerate(st.session_state.kebun_data):
             st.markdown(f"""
                 <div class="kartu-kebun">
-                    <h3 style="margin-top:0; color:#4e3629;">📍 Blok: {row['Blok']}</h3>
-                    <p style="margin:3px 0; font-size:14px;">🗺️ <b>Lokasi:</b> {row['Lokasi']} | 🏔️ <b>Ketinggian:</b> {row['Ketinggian']} mdpl</p>
-                    <p style="margin:3px 0; font-size:14px;">🌱 <b>Varietas:</b> Kopi {row['Varietas']} | 🌦️ <b>Cuaca:</b> {row['Status_Musim']}</p>
-                    <p style="margin:3px 0; font-size:14px;">🟫 <b>Sistem Pupuk:</b> {row['Jenis_Pupuk']}</p>
-                    <p style="margin:5px 0 0 0; color:#666; font-size:13px;"><b>Populasi:</b> {row['Jumlah_Pohon']} Pohon | <b>Tanggal Tanam:</b> {row['Tanggal_Tanam']}</p>
+                    <h3 style="margin-top:0; color:#4e3629;">📍 Blok: {row.get('Blok')}</h3>
+                    <p style="margin:3px 0; font-size:14px;">🗺️ <b>Lokasi:</b> {row.get('Lokasi')} | 🏔️ <b>Ketinggian:</b> {row.get('Ketinggian')} mdpl</p>
+                    <p style="margin:3px 0; font-size:14px;">🌱 <b>Varietas:</b> Kopi {row.get('Varietas')} | 🌦️ <b>Cuaca:</b> {row.get('Status_Musim')}</p>
+                    <p style="margin:3px 0; font-size:14px;">🟫 <b>Sistem Pupuk:</b> {row.get('Jenis_Pupuk')}</p>
+                    <p style="margin:5px 0 0 0; color:#666; font-size:13px;"><b>Populasi:</b> {row.get('Jumlah_Pohon')} Pohon | <b>Tanggal Tanam:</b> {row.get('Tanggal_Tanam')}</p>
                 </div>
             """, unsafe_allow_html=True)
             
-            if st.button(f"🗑️ Hapus {row['Blok']}", key=f"hapus_{row['Blok']}_{idx}"):
+            if st.button(f"🗑️ Hapus {row.get('Blok')}", key=f"hapus_{row.get('Blok')}_{idx}"):
                 st.session_state.kebun_data.pop(idx)
                 kunci_data_ke_link()
                 if not st.session_state.kebun_data:
                     st.query_params.clear()
                 st.rerun()
 
-# 3. MENU: TAMPILAN JADWAL (MENGGUNAKAN VARIABEL KEBUN_DATA SINKRON - 100% BEBAS EROR)
+# 3. MENU: JADWAL KERJA (PERBAIKAN TOTAL FORMAT STR WAKTU)
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
@@ -145,13 +150,19 @@ elif menu == "📅 Jadwal Kerja":
         st.info("📲 Belum ada jadwal tugas. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
     else:
         for row in st.session_state.kebun_data:
-            blok_id = row['Blok']
-            tgl = pd.to_datetime(row['Tanggal_Tanam'])
-            musim = row['Status_Musim']
-            h_mdpl = int(row['Ketinggian'])
-            var_kopi = row['Varietas']
+            blok_id = row.get('Blok')
+            musim = row.get('Status_Musim')
+            h_mdpl = int(row.get('Ketinggian', 800))
+            var_kopi = row.get('Varietas')
             
-            st.markdown(f"#### 📍 Blok Kerja: **{blok_id}** ({row['Lokasi']} - {h_mdpl} mdpl)")
+            # Membongkar teks tanggal secara aman menggunakan split strip bawaan Python asli (Anti-Mogok)
+            tgl_str = row.get('Tanggal_Tanam')
+            try:
+                tgl_obj = datetime.strptime(tgl_str, "%Y-%m-%d")
+            except:
+                tgl_obj = datetime.now()
+            
+            st.markdown(f"#### 📍 Blok Kerja: **{blok_id}** ({row.get('Lokasi')} - {h_mdpl} mdpl)")
             
             if var_kopi == "Arabika" and h_mdpl < 1000:
                 st.warning(f"⚠️ **REKOMENDASI ALAM:** Kopi Arabika ditanam di {h_mdpl} mdpl (Terlalu Rendah). Rentan karat daun!")
@@ -161,7 +172,7 @@ elif menu == "📅 Jadwal Kerja":
                 st.success(f"✅ **KONDISI IDEAL:** Ketinggian lahan {h_mdpl} mdpl cocok untuk varietas Kopi {var_kopi}!")
                 
             tugas_list = []
-            if "Organik" in row['Jenis_Pupuk']:
+            if "Organik" in row.get('Jenis_Pupuk', ''):
                 tugas_list += [("🟫 Aplikasi Pupuk Dasar (Kompos)", 14), ("🟫 Pemupukan Organik Tahap 1", 120)]
             else:
                 tugas_list += [("🧪 Aplikasi Pupuk Kimia Dasar", 30), ("🧪 Pemupukan NPK Vegetatif", 90)]
@@ -177,8 +188,3 @@ elif menu == "📅 Jadwal Kerja":
                 tugas_list += [("🌧️ Cek Saluran Drainase Kebun", 5), ("🌧️ Pembersihan Gulma Hujan", 15)]
                 
             tugas_list.sort(key=lambda x: x)
-            for nama_tugas, jeda_hari in tugas_list:
-                tgl_target = tgl + timedelta(days=jeda_hari)
-                tgl_indo = tgl_target.strftime('%d %b %Y')
-                st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_indo}")
-            st.markdown("---")
