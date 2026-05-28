@@ -1,17 +1,30 @@
 import streamlit as st
 import pandas as pd
+import os
+import base64
 from datetime import datetime, timedelta
 
 # Konfigurasi Tampilan Utama Halaman HP
 st.set_page_config(page_title="Talaga Hangsa KopiPlanPro", layout="centered")
 
-# --- KODE DESAIN TEMA (KUSTOMISASI WARNA & BACKGROUND) ---
+# --- SISTEM PROSES GAMBAR BASE64 (MENGUNCI KETAJAMAN & CENTER MUTLAK) ---
+def konversi_gambar_ke_html(jalur_gambar):
+    with open(jalur_gambar, "rb") as file_gambar:
+        data_binner = file_gambar.read()
+        format_base64 = base64.b64encode(data_binner).decode()
+    # HTML khusus untuk mengunci pixel agar jernih tajam (anti-alias / crisp-edges)
+    return f"""
+    <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 0px; margin-bottom: -5px;">
+        <img src="data:image/png;base64,{format_base64}" style="width: 130px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;">
+    </div>
+    """
+
+# --- KODE DESAIN TEMA LUXURY (HEMAT SPACE) ---
 st.markdown("""
     <style>
-    /* Latar Belakang Aplikasi Bernuansa Alam */
-    .stApp {
-        background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%);
-    }
+    header.stAppHeader { background-color: transparent !important; height: 0px !important; }
+    section.stMain .block-container { padding-top: 1.5rem !important; max-width: 100% !important; }
+    .stApp { background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%); }
     
     /* Mengubah Warna Teks Judul Utama (Center) */
     .judul-utama {
@@ -30,41 +43,24 @@ st.markdown("""
         font-weight: 500; 
         text-align: center; 
         margin-top: -5px;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
         font-size: 14px;
     }
     
-    /* Memaksa elemen st.image agar berada di tengah */
-    [data-testid="stImage"] {
-        display: flex;
-        justify-content: center;
-        margin: 0 auto;
+    /* KOTAK PERINGATAN KUNING TIPIS & HEMAT TEMPAT */
+    .kotak-warning-petani {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        line-height: 1.4;
+        margin-bottom: 20px;
+        border: 1px solid #ffeeba;
+        text-align: left;
     }
     
     /* Desain Kotak Kartu Informasi */
-    .block-container .element-container div.stAlert {
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        border: none;
-    }
-    
-    /* Kartu Peringatan Tugas Belum Selesai */
-    div[data-testid="stNotification"] {
-        border-left: 5px solid #d9534f !important;
-        background-color: #ffffff !important;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(217, 83, 79, 0.08);
-    }
-    
-    /* Percantik Tombol Menu Navigasi */
-    div[data-testid="stRadio"] > div {
-        background-color: #ffffff;
-        padding: 10px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-    }
-    
-    /* Kotak Kontainer Custom untuk Data Kebun */
     .kartu-kebun {
         background-color: #ffffff;
         padding: 20px;
@@ -73,23 +69,38 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         margin-bottom: 20px;
     }
+    
+    div[data-testid="stRadio"] > div {
+        background-color: #ffffff;
+        padding: 10px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- BAGIAN LOGO PENGINISIASI (MENGGUNAKAN FILE logo.png DI GITHUB) ---
+# --- EKSEKUSI PENAMPILAN LOGO (GARANSI CENTER & TAJAM) ---
 NAMA_LOGO = "logo.png"
 
-try:
-    # Membaca gambar langsung menggunakan Streamlit murni agar stabil
-    st.image(NAMA_LOGO, width=130)
-except:
-    # Teks cadangan halus jika file gambar belum terbaca sempurna oleh server
-    st.markdown("<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ Memuat Logo... ]</p>", unsafe_allow_html=True)
+if os.path.exists(NAMA_LOGO):
+    try:
+        html_logo = konversi_gambar_ke_html(NAMA_LOGO)
+        st.markdown(html_logo, unsafe_allow_html=True)
+    except:
+        st.markdown("<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ Memuat Logo... ]</p>", unsafe_allow_html=True)
+else:
+    st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' tidak ditemukan ]</p>", unsafe_allow_html=True)
 
 # --- JUDUL APLIKASI (CENTER DI BAWAH LOGO) ---
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-judul'>Asisten Digital Manajemen Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
-st.write("")
+st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
+
+# --- KOTAK PERINGATAN KUNING PAS & HEMAT TEMPAT ---
+st.markdown("""
+    <div class="kotak-warning-petani">
+        ⚠️ **PENTING UNTUK PETANI:** Data kebun tersimpan aman di memori internet HP Anda. <b>JANGAN</b> hapus riwayat internet (Cache/Cookies) HP Anda agar data tidak hilang secara otomatis.
+    </div>
+""", unsafe_allow_html=True)
 
 # --- SISTEM PENYIMPANAN DATA MANDIRI ---
 if 'kebun_data' not in st.session_state:
@@ -196,17 +207,6 @@ elif menu == "🧮 Kalkulator Pupuk":
         df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
         
         if not df_filter.empty:
-            # Perbaikan mutlak pemanggilan data yang stabil
             jumlah_pohon = int(df_filter['Jumlah_Pohon'].values[0])
             sistem_pupuk = str(df_filter['Jenis_Pupuk'].values[0])
             
-            st.info(f"**Blok Terpilih:** {pilihan_blok} | **Populasi:** {jumlah_pohon} Pohon")
-            
-            if "Organik" in sistem_pupuk:
-                total_kebutuhan = jumlah_pohon * 5.0
-                st.metric(label="Total Pupuk Kompos/Kohe yang Diperlukan", value=f"{total_kebutuhan:,.1f} Kg")
-                st.caption("💡 Dosis standar: 5 Kg pupuk organik per pohon.")
-            else:
-                total_kebutuhan_kg = (jumlah_pohon * 100) / 1000
-                st.metric(label="Total Pupuk NPK Kimia yang Diperlukan", value=f"{total_kebutuhan_kg:,.1f} Kg")
-                st.caption("💡 Dosis standar: 100 Gram pupuk NPK per pohon.")
