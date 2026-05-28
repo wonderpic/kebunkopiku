@@ -22,15 +22,15 @@ if os.path.exists(NAMA_LOGO):
     except:
         pass
 
-# --- KODE DESAIN TEMA LUXURY (KOREKSI MARGIN PAS) ---
+# --- KODE DESAIN TEMA LUXURY ---
 st.markdown("""
     <style>
-    /* Menghapus padding bawaan atas secara pas agar logo TIDAK terpotong */
-    .stAppHeader {
-        display: none !important;
+    header.stAppHeader {
+        background-color: transparent !important;
+        height: 0px !important;
     }
     section.stMain .block-container {
-        padding-top: 1rem !important; /* Memberi ruang aman 1rem di atas logo */
+        padding-top: 1rem !important;
         max-width: 100% !important;
     }
     
@@ -38,13 +38,12 @@ st.markdown("""
         background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%);
     }
     
-    /* Mengubah Teks Judul */
     .judul-utama {
         color: #1e3f20 !important;
         font-family: 'Helvetica Neue', sans-serif;
         font-weight: 800;
         text-align: center;
-        margin-top: 0px !important;
+        margin-top: 5px !important;
         margin-bottom: 2px !important;
         font-size: 24px;
     }
@@ -58,7 +57,6 @@ st.markdown("""
         font-size: 13px;
     }
     
-    /* KOTAK PERINGATAN KUNING TIPIS & HEMAT TEMPAT */
     .kotak-warning-petani {
         background-color: #fff3cd;
         color: #856404;
@@ -71,7 +69,6 @@ st.markdown("""
         text-align: left;
     }
     
-    /* Desain Kotak Kartu Informasi */
     .kartu-kebun {
         background-color: #ffffff;
         padding: 15px;
@@ -89,7 +86,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- BLOK HEADER (CENTER & BERJARAK AMAN) ---
+# --- BLOK HEADER ---
 if html_src_logo:
     st.markdown(f"""
         <div style="text-align: center; width: 100%; margin-bottom: 5px; margin-top: 0px;">
@@ -100,7 +97,6 @@ if html_src_logo:
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
 
-# --- KOREKSI: BOX PERINGATAN KUNING TIPIS BERHASIL DIAKTIFKAN ---
 st.markdown("""
     <div class="kotak-warning-petani">
         ⚠️ **PENTING PETANI:** Data tersimpan di HP ini. <b>JANGAN</b> hapus riwayat internet browser Anda agar data tidak hilang. Silakan klik tombol <b>Unduh Cadangan</b> di menu Data Kebun secara berkala.
@@ -208,7 +204,7 @@ elif menu == "📅 Jadwal Kerja":
                 st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_indo}")
             st.markdown("---")
 
-# 4. MENU: TAMPILAN KALKULATOR
+# 4. MENU: TAMPILAN KALKULATOR (DENGAN FITUR DROPDOWN AFILIASI LOKAL)
 elif menu == "🧮 Kalkulator Pupuk":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🧮 Kalkulator Kebutuhan Pupuk</h3>", unsafe_allow_html=True)
     
@@ -224,5 +220,12 @@ elif menu == "🧮 Kalkulator Pupuk":
             
             st.info(f"**Blok Terpilih:** {pilihan_blok} | **Populasi:** {jumlah_pohon} Pohon")
             
+            # Variabel untuk menampung total jumlah pesanan
+            tonase_pesanan = 0.0
+            satuan = "Kg"
+            
             if "Organik" in sistem_pupuk:
-                total_kebutuhan = jumlah_pohon * 5.0
+                tonase_pesanan = jumlah_pohon * 5.0
+                st.metric(label="Total Pupuk Kompos/Kohe Dibutuhkan", value=f"{tonase_pesanan:,.1f} Kg")
+                jenis_barang = "Pupuk Organik Kompos"
+            else:
