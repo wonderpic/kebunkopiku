@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import os
 from datetime import datetime, timedelta
 
 # Konfigurasi Tampilan Utama
@@ -8,20 +9,21 @@ st.set_page_config(page_title="KopiPlan Premium", layout="centered")
 # --- KODE DESAIN TEMA (KUSTOMISASI WARNA & BACKGROUND) ---
 st.markdown("""
     <style>
-    /* 1. Latar Belakang Aplikasi Bernuansa Alam (Gradasi Lembut) */
+    /* Latar Belakang Aplikasi Bernuansa Alam */
     .stApp {
         background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%);
     }
     
-    /* 2. Mengubah Warna Teks Judul Utama */
+    /* Mengubah Warna Teks Judul Utama */
     h1 {
         color: #1e3f20 !important;
         font-family: 'Helvetica Neue', sans-serif;
         font-weight: 800;
         text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        margin-top: 10px !important;
     }
     
-    /* 3. Desain Kotak Kartu Informasi (Data Kebun & Tugas) */
+    /* Desain Kotak Kartu Informasi */
     .block-container .element-container div.stAlert {
         border-radius: 12px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
@@ -36,7 +38,7 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(217, 83, 79, 0.08);
     }
     
-    /* 4. Percantik Tombol Menu Navigasi */
+    /* Percantik Tombol Menu Navigasi */
     div[data-testid="stRadio"] > div {
         background-color: #ffffff;
         padding: 10px;
@@ -44,7 +46,7 @@ st.markdown("""
         box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
     
-    /* 5. Kotak Kontainer Custom untuk Data Kebun */
+    /* Kotak Kontainer Custom untuk Data Kebun */
     .kartu-kebun {
         background-color: #ffffff;
         padding: 20px;
@@ -53,12 +55,28 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         margin-bottom: 20px;
     }
+    
+    /* Desain Bingkai Foto Logo */
+    .logo-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: -10px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
+# --- BAGIAN LOGO PENGINISIASI ---
+# Sistem akan otomatis mengecek apakah file logo.png ada di GitHub Anda
+if os.path.exists("logo.png"):
+    # Menampilkan logo di tengah secara proporsional dengan lebar 120 pixel
+    st.image("logo.png", width=120, use_container_width=False)
+else:
+    # Teks cadangan jika Anda belum mengunggah logo ke GitHub
+    st.markdown("<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ Logo Penginisiasi Belum Diunggah ]</p>", unsafe_allow_html=True)
+
 # --- JUDUL APLIKASI ---
-st.title("☕ KopiPlan Pro")
-st.markdown("<p style='color: #4a6b4c; font-weight: 500; margin-top: -15px;'>Asisten Digital Pemeliharaan Kebun Kopi Anda</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>☕ KopiPlan Pro</h1>", unsafe_allow_html=True)
+st.markdown("<p style='color: #4a6b4c; font-weight: 500; text-align: center; margin-top: -15px;'>Asisten Digital Inisiasi Oleh Anda</p>", unsafe_allow_html=True)
 st.write("")
 
 # --- SISTEM PENYIMPANAN DATA MANDIRI ---
@@ -103,7 +121,6 @@ elif menu == "📊 Data Kebun":
         st.write("")
         
         for idx, row in st.session_state.kebun_data.iterrows():
-            # Menggunakan desain kartu kustom (HTML + CSS)
             st.markdown(f"""
                 <div class="kartu-kebun">
                     <h3 style="margin-top:0; color:#4e3629;">📍 Blok: {row['Blok']}</h3>
@@ -153,7 +170,6 @@ elif menu == "📅 Jadwal Kerja":
             for nama_tugas, jeda_hari in tugas_list:
                 tgl_target = tgl + timedelta(days=jeda_hari)
                 tgl_indo = tgl_target.strftime('%d %b %Y')
-                # Menggunakan st.error dengan modifikasi CSS bawaan untuk kartu tugas
                 st.error(f"⚠️ **TUGAS HARUS DILAKUKAN**\n\n**{nama_tugas}**\n\n📆 Target: {tgl_indo}")
             st.markdown("---")
 
