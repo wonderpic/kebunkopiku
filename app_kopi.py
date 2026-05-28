@@ -7,7 +7,31 @@ from datetime import datetime, timedelta
 # Konfigurasi Tampilan Utama Halaman HP
 st.set_page_config(page_title="Talaga Hangsa KopiPlanPro", layout="centered")
 
-# --- KODE DESAIN TEMA LUXURY (HEMAT SPACE LAYOUT) ---
+# --- 🌟 PENYELARASAN PRO: PEMBACA DATA UTAMA DI ATAS (GARANSI JADWAL MUNCUL) 🌟 ---
+if 'kebun_data' not in st.session_state:
+    st.session_state.kebun_data = []
+
+try:
+    # Memaksa server membaca link URL di HP sebelum merender menu apa pun
+    params = st.query_params
+    if 'kebun_backup' in params:
+        raw_b64 = params.get('kebun_backup', '')
+        if raw_b64:
+            raw_json = base64.b64decode(raw_b64).decode('utf-8')
+            st.session_state.kebun_data = json.loads(raw_json)
+except:
+    pass
+
+def kunci_data_ke_link():
+    try:
+        if st.session_state.kebun_data:
+            json_str = json.dumps(st.session_state.kebun_data)
+            b64_str = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
+            st.query_params['kebun_backup'] = b64_str
+    except:
+        pass
+
+# --- KODE DESAIN TEMA LUXURY ---
 st.markdown("""
     <style>
     header.stAppHeader { background-color: transparent !important; height: 0px !important; }
@@ -51,35 +75,11 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- JEMBATAN SINKRONISASI MEMORI LINK SECARA INSTAN ---
-if 'kebun_data' not in st.session_state:
-    st.session_state.kebun_data = []
-
-# Membaca link enkripsi URL browser secara aman menggunakan fungsi internal Streamlit
-try:
-    params = st.query_params
-    if 'kebun_backup' in params:
-        raw_b64 = params.get('kebun_backup', '')
-        if raw_b64:
-            raw_json = base64.b64decode(raw_b64).decode('utf-8')
-            st.session_state.kebun_data = json.loads(raw_json)
-except:
-    pass
-
-def kunci_data_ke_link():
-    try:
-        if st.session_state.kebun_data:
-            json_str = json.dumps(st.session_state.kebun_data)
-            b64_str = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
-            st.query_params['kebun_backup'] = b64_str
-    except:
-        pass
-
-# --- NAVIGASI MENU UTAMA (3 MENU UTAMA YANG STABIL) ---
+# --- NAVIGASI MENU UTAMA ---
 menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🌱 Tambah Blok"], horizontal=True)
 st.write("---")
 
-# 1. MENU: TAMBAH BLOK Mandiri
+# 1. MENU: TAMBAH BLOK
 if menu == "🌱 Tambah Blok":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🌱 Tambah Blok Kebun Baru</h3>", unsafe_allow_html=True)
     with st.form("form_kebun_baru"):
@@ -189,3 +189,4 @@ elif menu == "📅 Jadwal Kerja":
             tugas_list.sort(key=lambda x: x)
             for nama_tugas, jeda_hari in tugas_list:
                 tgl_target = tgl_obj + timedelta(days=jeda_hari)
+                tgl_indo = tgl_target.strftime('%d %b %Y')
