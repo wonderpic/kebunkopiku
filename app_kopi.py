@@ -55,24 +55,18 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         margin-bottom: 20px;
     }
-    
-    /* Desain Bingkai Foto Logo */
-    .logo-container {
-        display: flex;
-        justify-content: center;
-        margin-bottom: -10px;
-    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- BAGIAN LOGO PENGINISIASI ---
-# Sistem akan otomatis mengecek apakah file logo.png ada di GitHub Anda
-if os.path.exists("logo.png"):
-    # Menampilkan logo di tengah secara proporsional dengan lebar 120 pixel
-    st.image("logo.png", width=120, use_container_width=False)
+# --- BAGIAN LOGO PENGINISIASI (Spesifik Membaca "Asset 3.png") ---
+NAMA_LOGO = "Asset 3.png"
+
+if os.path.exists(NAMA_LOGO):
+    # Menampilkan logo Anda di tengah secara proporsional dengan lebar 120 pixel
+    st.image(NAMA_LOGO, width=120, use_container_width=False)
 else:
-    # Teks cadangan jika Anda belum mengunggah logo ke GitHub
-    st.markdown("<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ Logo Penginisiasi Belum Diunggah ]</p>", unsafe_allow_html=True)
+    # Teks pengingat jika file belum diunggah atau nama file di GitHub tidak sama persis
+    st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' belum ditemukan di GitHub ]</p>", unsafe_allow_html=True)
 
 # --- JUDUL APLIKASI ---
 st.markdown("<h1 style='text-align: center;'>☕ KopiPlan Pro</h1>", unsafe_allow_html=True)
