@@ -5,15 +5,12 @@ from datetime import datetime, timedelta
 # Konfigurasi Tampilan Aplikasi HP
 st.set_page_config(page_title="KopiPlan Pro Fix", layout="centered")
 st.title("☕ KopiPlan Pro")
-st.caption("Aplikasi Penjadwalan, Perawatan & Manajemen Kebun Kopi")
+st.caption("Aplikasi Penjadwalan, Perawatan & Kalkulator Kebun Kopi")
 
-# --- SISTEM PENYIMPANAN DATA MANDIRI (ANTI-ERROR) ---
-# Membuat data awal standar jika memori aplikasi masih kosong
+# --- SISTEM PENYIMPANAN DATA MANDIRI (SUDAH DIBERSIHKAN) ---
+# Memastikan memori awal benar-benar kosong agar pengguna baru bisa input dari nol
 if 'kebun_data' not in st.session_state:
-    st.session_state.kebun_data = pd.DataFrame([
-        {"Blok": "Blok A", "Varietas": "Arabika", "Jenis_Pupuk": "Organik (Kompos/Kohe)", "Tanggal_Tanam": datetime(2025, 1, 1).date(), "Jumlah_Pohon": 150, "Status_Musim": "Musim Kemarau"},
-        {"Blok": "Blok B", "Varietas": "Robusta", "Jenis_Pupuk": "Non-Organik (Kimia/NPK)", "Tanggal_Tanam": datetime(2025, 6, 1).date(), "Jumlah_Pohon": 200, "Status_Musim": "Musim Hujan"}
-    ])
+    st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
 
 # --- NAVIGASI MENU UTAMA (MOBILE FRIENDLY) ---
 menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal & Peringatan", "🧮 Kalkulator Pupuk", "🌱 Tambah Blok"], horizontal=True)
@@ -22,7 +19,7 @@ menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal & Peringatan", "
 if menu == "🌱 Tambah Blok":
     st.subheader("🌱 Tambah Blok Kebun Baru")
     with st.form("form_kebun_baru"):
-        nama_blok = st.text_input("Nama Blok Baru", placeholder="Contoh: Blok C / Lereng Barat")
+        nama_blok = st.text_input("Nama Blok Baru", placeholder="Contoh: Blok A / Lereng Barat")
         varietas = st.selectbox("Varietas Kopi", ["Arabika", "Robusta"])
         jenis_pupuk = st.selectbox("Metode Pemupukan Utama", ["Organik (Kompos/Kohe)", "Non-Organik (Kimia/NPK)"])
         status_musim = st.selectbox("Kondisi Cuaca Saat Ini", ["Musim Kemarau", "Musim Hujan"])
@@ -32,7 +29,7 @@ if menu == "🌱 Tambah Blok":
 
     if submit_button and nama_blok:
         # Validasi agar tidak ada nama blok yang kembar
-        if nama_blok in st.session_state.kebun_data['Blok'].values:
+        if not st.session_state.kebun_data.empty and nama_blok in st.session_state.kebun_data['Blok'].values:
             st.error(f"Nama Blok '{nama_blok}' sudah terdaftar! Gunakan nama lain.")
         else:
             # Memasukkan data baru ke dalam tabel memori
@@ -42,31 +39,28 @@ if menu == "🌱 Tambah Blok":
             st.success(f"🎉 Sukses! {nama_blok} berhasil ditambahkan ke sistem.")
             st.rerun()
 
-# 2. MENU: TAMPILAN DATA KEBUN (DENGAN FITUR HAPUS)
+# 2. MENU: TAMPILAN DATA KEBUN
 elif menu == "📊 Data Kebun":
     st.subheader("Ringkasan Kebun")
     
     if st.session_state.kebun_data.empty:
-        st.info("Belum ada data kebun dikelola. Silakan tambah blok terlebih dahulu.")
+        st.info("📲 Belum ada data kebun. Silakan masuk ke menu '🌱 Tambah Blok' terlebih dahulu untuk mengisi data kebun Anda sendiri.")
     else:
         total_pohon = st.session_state.kebun_data['Jumlah_Pohon'].sum()
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
         st.write("---")
         
-        # Menampilkan data per blok beserta tombol hapus masing-masing
         for idx, row in st.session_state.kebun_data.iterrows():
             with st.container():
                 st.markdown(f"### 📍 Blok: {row['Blok']}")
                 st.markdown(f"**Varietas:** Kopi {row['Varietas']} | **Cuaca:** {row['Status_Musim']}")
                 st.markdown(f"**Sistem Pupuk:** {row['Jenis_Pupuk']}")
-                st.markdown(f"**Populasi:** {row['Jumlah_Pohon']} Pohon | **Tanggal Tanam:** {row['Tanggal_Tanam']}")
+                st.markdown(f"**Populasi:** {row['Jumlah Pohon']} Pohon | **Tanggal Tanam:** {row['Tanggal_Tanam']}")
                 
-                # FITUR BARU: Tombol hapus spesifik per blok kebun yang sudah tidak ada
                 if st.button(f"🗑️ Hapus {row['Blok']}", key=f"hapus_{row['Blok']}_{idx}"):
-                    # Menghapus baris berdasarkan index data
                     st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
-                    st.success(f"Blok {row['Blok']} telah berhasil dihapus dari sistem!")
-                    st.rerun() # Muat ulang halaman agar data langsung hilang dari layar
+                    st.success(f"Blok {row['Blok']} telah berhasil dihapus!")
+                    st.rerun()
                 st.write("---")
 
 # 3. MENU: TAMPILAN JADWAL & PERINGATAN PINTAR
@@ -74,7 +68,7 @@ elif menu == "📅 Jadwal & Peringatan":
     st.subheader("📋 Daftar Tugas Pemeliharaan")
     
     if st.session_state.kebun_data.empty:
-        st.info("Belum ada jadwal. Tambahkan data kebun terlebih dahulu.")
+        st.info("Belum ada jadwal. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
     else:
         for idx, row in st.session_state.kebun_data.iterrows():
             blok_id = row['Blok']
@@ -83,7 +77,6 @@ elif menu == "📅 Jadwal & Peringatan":
             
             st.markdown(f"### 📍 Blok Kerja: **{blok_id}** ({row['Varietas']})")
             
-            # Logika Penjadwalan Otomatis Berdasarkan Aturan Kopi
             tugas_list = []
             if "Organik" in row['Jenis_Pupuk']:
                 tugas_list += [("🟫 Aplikasi Pupuk Dasar (Kompos)", 14), ("🟫 Pemupukan Organik Tahap 1", 120)]
@@ -102,7 +95,6 @@ elif menu == "📅 Jadwal & Peringatan":
                 
             tugas_list.sort(key=lambda x: x)
             
-            # Tampilan alarm peringatan merah di lapangan
             for nama_tugas, jeda_hari in tugas_list:
                 tgl_target = tgl + timedelta(days=jeda_hari)
                 tgl_indo = tgl_target.strftime('%d %b %Y')
@@ -117,7 +109,6 @@ elif menu == "🧮 Kalkulator Pupuk":
         st.info("Masukkan data kebun terlebih dahulu untuk mengaktifkan kalkulator.")
     else:
         pilihan_blok = st.selectbox("Pilih Blok Kebun:", st.session_state.kebun_data['Blok'].unique())
-        
         df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
         
         if not df_filter.empty:
