@@ -9,33 +9,33 @@
         body { background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%); color: #2c3e50; padding: 15px; min-height: 100vh; }
         .container { max-width: 500px; margin: 0 auto; background: transparent; }
         
-        /* Header & Logo */
+        /* Header & Logo Layout */
         .header-box { text-align: center; margin-bottom: 15px; }
         .logo-img { width: 120px; height: auto; display: block; margin: 0 auto 5px; object-fit: contain; }
         .judul-utama { color: #1e3f20; font-weight: 800; font-size: 24px; margin-bottom: 2px; }
         .sub-judul { color: #4a6b4c; font-weight: 500; font-size: 13px; margin-bottom: 15px; }
         
-        /* Kotak Warning Kuning */
+        /* Alert Box */
         .kotak-warning { background-color: #fff3cd; color: #856404; padding: 10px 12px; border-radius: 8px; font-size: 11px; line-height: 1.4; margin-bottom: 15px; border: 1px solid #ffeeba; text-align: left; }
         
-        /* Navigasi Tab Menu */
+        /* Navigation Tabs */
         .nav-tabs { display: flex; background: #ffffff; padding: 5px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 20px; justify-content: space-between; }
-        .tab-btn { flex: 1; background: transparent; border: none; padding: 10px 5px; font-size: 12px; font-weight: bold; color: #7f8c8d; cursor: pointer; border-radius: 8px; text-align: center; outline: none; }
+        .tab-btn { flex: 1; background: transparent; border: none; padding: 10px 5px; font-size: 12px; font-weight: bold; color: #7f8c8d; cursor: pointer; border-radius: 8px; text-align: center; outline: none; -webkit-tap-highlight-color: transparent; }
         .tab-btn.active { background: #1e3f20; color: #ffffff; }
         
-        /* Konten Tab */
+        /* Tab Content Display */
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        /* Form & Input */
+        /* Forms */
         .kartu-form { background: #ffffff; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 15px; }
         .form-group { margin-bottom: 12px; text-align: left; }
         .form-group label { display: block; font-size: 12px; font-weight: bold; color: #1e3f20; margin-bottom: 4px; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; }
         .btn-submit { width: 100%; background: #1e3f20; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 5px; }
         
-        /* Kartu Tampilan Data & Tugas */
-        .kartu-data { background: #ffffff; padding: 15px; border-radius: 12px; border-left: 6px solid #4e3629; box-shadow: 0 3px 10px rgba(0,0,0,0.03); margin-bottom: 12px; position: relative; }
+        /* Cards & Lists */
+        .kartu-data { background: #ffffff; padding: 15px; border-radius: 12px; border-left: 6px solid #4e3629; box-shadow: 0 3px 10px rgba(0,0,0,0.03); margin-bottom: 12px; position: relative; text-align: left; }
         .kartu-data h3 { font-size: 16px; color: #4e3629; margin-bottom: 5px; }
         .kartu-data p { font-size: 13px; margin: 3px 0; color: #34495e; }
         .btn-hapus { background: #d9534f; color: white; border: none; padding: 6px 12px; font-size: 11px; border-radius: 6px; cursor: pointer; margin-top: 8px; font-weight: bold; }
@@ -52,26 +52,26 @@
 <body>
 
 <div class="container">
-    <!-- Header -->
+    <!-- Header Component -->
     <div class="header-box">
         <img src="logo.png" class="logo-img" alt="Logo" onerror="this.style.display='none'">
         <div class="judul-utama">Talaga Hangsa KopiPlanPro</div>
         <div class="sub-judul">Asisten Digital Perawatan Kebun Kopi</div>
     </div>
 
-    <!-- Kotak Warning -->
+    <!-- Warning Message -->
     <div class="kotak-warning">
         ⚠️ <b>PENTING UNTUK REKAN PETANI:</b> Data kebun Anda tersimpan aman dan terisolasi di memori HP Anda sendiri. Data tidak akan hilang saat halaman ditutup atau disegarkan.
     </div>
 
-    <!-- Navigasi Menu -->
+    <!-- Fixed Navigation Controls -->
     <div class="nav-tabs">
         <button class="tab-btn active" id="btn-data" onclick="bukaTab('data')">📊 Data Kebun</button>
         <button class="tab-btn" id="btn-jadwal" onclick="bukaTab('jadwal')">📅 Jadwal Kerja</button>
         <button class="tab-btn" id="btn-tambah" onclick="bukaTab('tambah')">🌱 Tambah Blok</button>
     </div>
 
-    <!-- TAB 1: DATA KEBUN -->
+    <!-- TAB 1: SUMMARY LIST -->
     <div id="tab-data" class="tab-content active">
         <div class="metric-box">
             <div style="font-size: 12px; color: #7f8c8d;">Total Semua Pohon Kopi Dikelola</div>
@@ -80,12 +80,12 @@
         <div id="list-kebun"></div>
     </div>
 
-    <!-- TAB 2: JADWAL KERJA -->
+    <!-- TAB 2: SCHEDULE LIST -->
     <div id="tab-jadwal" class="tab-content">
         <div id="list-jadwal"></div>
     </div>
 
-    <!-- TAB 3: TAMBAH BLOK -->
+    <!-- TAB 3: INPUT COMPONENT -->
     <div id="tab-tambah" class="tab-content">
         <div class="kartu-form">
             <form id="form-kebun" onsubmit="simpanKebun(event)">
@@ -137,6 +137,7 @@
 </div>
 
 <script>
+    // System-wide Global Setup
     document.getElementById('tgl_tanam').valueAsDate = new Date();
     let kebunData = JSON.parse(localStorage.getItem('talaga_kebun_data')) || [];
 
@@ -188,4 +189,3 @@
     }
 
     function muatDataKebun() {
-        const wadah = document.getElementById('list-kebun');
