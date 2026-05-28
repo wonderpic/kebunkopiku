@@ -6,45 +6,34 @@ st.set_page_config(page_title="KopiPlan Pro", layout="centered")
 st.title("☕ KopiPlan Pro")
 st.caption("Aplikasi Penjadwalan Kebun Kopi")
 
-# --- SISTEM KUNCI DATA PERMANEN DENGAN SECRETS ---
+# --- SISTEM DATABASE SECRETS YANG AMAN ---
 if 'kebun_data' not in st.session_state:
-    # Membaca data yang dikunci secara permanen dari dashboard
     if "KEBUN_DATA" in st.secrets:
-        st.session_state.kebun_data = pd.DataFrame(st.secrets["KEBUN_DATA"])
+        # Mengubah data dari secrets menjadi tabel dengan paksaan nama kolom yang benar
+        raw_data = st.secrets["KEBUN_DATA"]
+        st.session_state.kebun_data = pd.DataFrame({
+            'Blok': raw_data.get('Blok', []),
+            'Varietas': raw_data.get('Varietas', []),
+            'Jenis_Pupuk': raw_data.get('Jenis_Pupuk', []),
+            'Tanggal_Tanam': raw_data.get('Tanggal_Tanam', []),
+            'Jumlah_Pohon': raw_data.get('Jumlah_Pohon', []),
+            'Status_Musim': raw_data.get('Status_Musim', [])
+        })
     else:
-        st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Jenis Pupuk', 'Tanggal Tanam', 'Jumlah Pohon', 'Status Musim'])
+        st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal Tanam', 'Jumlah Pohon', 'Status Musim'])
 
-# --- NAVIGASI NAVIGASI ---
-menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal & Peringatan", "🧮 Kalkulator Pupuk", "🌱 Tambah Blok"], horizontal=True)
+# --- NAVIGASI MENU ---
+menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal & Peringatan", "🧮 Kalkulator Pupuk"], horizontal=True)
 
-if menu == "🌱 Tambah Blok":
-    st.subheader("🌱 Tambah Blok Kebun Baru")
-    with st.form("form_kebun"):
-        nama_blok = st.text_input("Nama Blok")
-        varietas = st.selectbox("Varietas Kopi", ["Arabika", "Robusta"])
-        jenis_pupuk = st.selectbox("Metode Pemupukan Utama", ["Organik (Kompos/Kohe)", "Non-Organik (Kimia/NPK)"])
-        status_musim = st.selectbox("Kondisi Cuaca Saat Ini", ["Musim Kemarau", "Musim Hujan"])
-        tgl_tanam = st.date_input("Tanggal Tanam", datetime.now().date())
-        jml_pohon = st.number_input("Jumlah Pohon (Batang)", min_value=1, value=100)
-        submit = st.form_submit_button("⚡ Simpan Blok")
-
-    if submit and nama_blok:
-        new_row = pd.DataFrame([[nama_blok, varietas, jenis_pupuk, tgl_tanam, jml_pohon, status_musim]], 
-                                columns=['Blok', 'Varietas', 'Jenis Pupuk', 'Tanggal Tanam', 'Jumlah Pohon', 'Status Musim'])
-        st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_row], ignore_index=True)
-        st.success(f"Blok {nama_blok} berhasil ditambahkan!")
-        
-        # Tampilkan teks kunci untuk Anda salin ke dashboard secrets
-        st.info("💡 DATA BARU ANDA SUDAH SIAP. LAKUKAN LANGKAH NOMOR 3 DI BAWAH UNTUK MENGUNCINYA AGAR TIDAK HILANG.")
-
-elif menu == "📊 Data Kebun":
+if menu == "📊 Data Kebun":
     st.subheader("Ringkasan Kebun")
     if st.session_state.kebun_data.empty:
-        st.info("Belum ada data kebun.")
+        st.info("Belum ada data kebun. Silakan isi Secrets di dashboard Streamlit Anda.")
     else:
         for idx, row in st.session_state.kebun_data.iterrows():
-            st.markdown(f"### 📍 Blok: {row['Blok']} ({row['Varietas']})")
-            st.markdown(f"Sistem: {row['Jenis Pupuk']} | Populasi: {row['Jumlah Pohon']} Pohon")
+            st.markdown(f"### 📍 Blok: {row['Blok']}")
+            st.markdown(f"**Varietas:** Kopi {row['Varietas']} | **Sistem Pupuk:** {row['Jenis_Pupuk']}")
+            st.markdown(f"**Populasi:** {row['Jumlah Pohon']} Pohon | **Cuaca:** {row['Status_Musim']}")
             st.write("---")
 
 elif menu == "📅 Jadwal & Peringatan":
@@ -53,8 +42,8 @@ elif menu == "📅 Jadwal & Peringatan":
         st.info("Belum ada data kebun.")
     else:
         for idx, row in st.session_state.kebun_data.iterrows():
-            st.markdown(f"### 📍 Target Kerja: {row['Blok']}")
-            st.error(f"🚨 **BELUM DIKERJAKAN:** Pengecekan Rutin Hama & Penyiraman Blok {row['Blok']}")
+            st.markdown(f"### 📍 Target Kerja: {row['Blok']} ({row['Varietas']})")
+            st.error(f"🚨 **BELUM DIKERJAKAN:** Jadwal Penyiraman & Pengecekan Hama di {row['Blok']}")
             st.write("---")
 
 elif menu == "🧮 Kalkulator Pupuk":
@@ -63,5 +52,13 @@ elif menu == "🧮 Kalkulator Pupuk":
         st.info("Belum ada data kebun.")
     else:
         pilihan_blok = st.selectbox("Pilih Blok:", st.session_state.kebun_data['Blok'].unique())
-        data_blok = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok].iloc[0]
-        st.metric(label="Total Kebutuhan Estimasi Pupuk", value=f"{data_blok['Jumlah Pohon'] * 5} Kg")
+        df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
+        
+        if not df_filter.empty:
+            pohon = df_filter.iloc[0]['Jumlah Pohon']
+            pupuk = df_filter.iloc[0]['Jenis_Pupuk']
+            
+            if "Organik" in str(pupuk):
+                st.metric(label="Total Pupuk Kompos Dibutuhkan", value=f"{pohon * 5} Kg")
+            else:
+                st.metric(label="Total Pupuk NPK Kimia Dibutuhkan", value=f"{(pohon * 100) / 1000} Kg")
