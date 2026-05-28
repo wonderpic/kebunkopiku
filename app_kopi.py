@@ -1,11 +1,25 @@
 import streamlit as st
-import pandas as pd
-import os
+import json
 import base64
+import os
 from datetime import datetime, timedelta
 
 # Konfigurasi Tampilan Utama Halaman HP
 st.set_page_config(page_title="Talaga Hangsa KopiPlanPro", layout="centered")
+
+# --- KODE DESAIN TEMA LUXURY (HEMAT SPACE LAYOUT) ---
+st.markdown("""
+    <style>
+    header.stAppHeader { background-color: transparent !important; height: 0px !important; }
+    section.stMain .block-container { padding-top: 1.5rem !important; max-width: 100% !important; }
+    .stApp { background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%); }
+    .judul-utama { color: #1e3f20 !important; font-family: 'Helvetica Neue', sans-serif; font-weight: 800; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); margin-top: 5px !important; margin-bottom: 2px !important; font-size: 24px; }
+    .sub-judul { color: #4a6b4c; font-weight: 500; text-align: center; margin-top: 0px; margin-bottom: 12px; font-size: 13px; }
+    .kotak-warning-petani { background-color: #fff3cd; color: #856404; padding: 6px 12px; border-radius: 8px; font-size: 11px; line-height: 1.4; margin-bottom: 20px; border: 1px solid #ffeeba; text-align: left; }
+    .kartu-kebun { background-color: #ffffff; padding: 20px; border-radius: 15px; border-left: 6px solid #4e3629; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 20px; }
+    div[data-testid="stRadio"] > div { background-color: #ffffff; padding: 10px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    </style>
+    """, unsafe_allow_html=True)
 
 # --- SISTEM PROSES GAMBAR BASE64 ---
 def konversi_gambar_ke_html(jalur_gambar):
@@ -21,20 +35,6 @@ def konversi_gambar_ke_html(jalur_gambar):
     except:
         return ""
 
-# --- KODE DESAIN TEMA LUXURY (HEMAT SPACE) ---
-st.markdown("""
-    <style>
-    header.stAppHeader { background-color: transparent !important; height: 0px !important; }
-    section.stMain .block-container { padding-top: 1.5rem !important; max-width: 100% !important; }
-    .stApp { background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%); }
-    .judul-utama { color: #1e3f20 !important; font-family: 'Helvetica Neue', sans-serif; font-weight: 800; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); margin-top: 5px !important; margin-bottom: 2px !important; font-size: 24px; }
-    .sub-judul { color: #4a6b4c; font-weight: 500; text-align: center; margin-top: 0px; margin-bottom: 12px; font-size: 13px; }
-    .kotak-warning-petani { background-color: #fff3cd; color: #856404; padding: 6px 12px; border-radius: 8px; font-size: 11px; line-height: 1.4; margin-bottom: 20px; border: 1px solid #ffeeba; text-align: left; }
-    .kartu-kebun { background-color: #ffffff; padding: 20px; border-radius: 15px; border-left: 6px solid #4e3629; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 20px; }
-    div[data-testid="stRadio"] > div { background-color: #ffffff; padding: 10px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-    </style>
-    """, unsafe_allow_html=True)
-
 # --- EKSEKUSI PENAMPILAN LOGO ---
 NAMA_LOGO = "logo.png"
 if os.path.exists(NAMA_LOGO):
@@ -47,70 +47,131 @@ st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>",
 
 st.markdown("""
     <div class="kotak-warning-petani">
-        ⚠️ **INFORMASI PENTING:** Data kebun Anda dikunci langsung dari kode pusat GitHub agar permanen abadi dan tidak bisa hilang saat di-refresh.
+        ⚠️ **PENTING UNTUK PETANI:** Data kebun dikunci pada link browser HP Anda agar permanen abadi. Jangan bersihkan riwayat internet HP agar data tidak terhapus otomatis.
     </div>
 """, unsafe_allow_html=True)
 
-# --- 🌟 PUSAT PENGUNCIAN DATA KEBUN ASLI ANDA (ANTI-HILANG REFRESH) 🌟 ---
-# Silakan ketik dan sesuaikan data kebun asli Anda di bawah ini agar menetap abadi di HP kawan-kawan petani
-Daftar_Kebun_Anda = [
-    {"Blok": "Blok A Atas", "Lokasi": "Cianjur", "Ketinggian": 1100, "Varietas": "Arabika", "Jenis_Pupuk": "Organik (Kompos/Kohe)", "Tanggal_Tanam": "2025-03-10", "Jumlah_Pohon": 500, "Status_Musim": "Musim Hujan"},
-    {"Blok": "Blok B Lembah", "Lokasi": "Cianjur", "Ketinggian": 950, "Varietas": "Robusta", "Jenis_Pupuk": "Non-Organik (Kimia/NPK)", "Tanggal_Tanam": "2024-11-20", "Jumlah_Pohon": 800, "Status_Musim": "Musim Kemarau"}
-]
+# --- JEMBATAN SINKRONISASI MEMORI LINK SECARA INSTAN ---
+if 'kebun_data' not in st.session_state:
+    st.session_state.kebun_data = []
 
+# Membaca link enkripsi URL browser secara aman menggunakan fungsi internal Streamlit
+try:
+    params = st.query_params
+    if 'kebun_backup' in params:
+        raw_b64 = params.get('kebun_backup', '')
+        if raw_b64:
+            raw_json = base64.b64decode(raw_b64).decode('utf-8')
+            st.session_state.kebun_data = json.loads(raw_json)
+except:
+    pass
 
-# Mengunci tabel agar selalu membaca data di atas secara konstan tanpa session_state
-df_kebun = pd.DataFrame(Daftar_Kebun_Anda)
+def kunci_data_ke_link():
+    try:
+        if st.session_state.kebun_data:
+            json_str = json.dumps(st.session_state.kebun_data)
+            b64_str = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
+            st.query_params['kebun_backup'] = b64_str
+    except:
+        pass
 
-# --- NAVIGASI MENU UTAMA (2 MENU PALING STABIL) ---
-menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja"], horizontal=True)
+# --- NAVIGASI MENU UTAMA (3 MENU UTAMA YANG STABIL) ---
+menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🌱 Tambah Blok"], horizontal=True)
 st.write("---")
 
-# 1. MENU: DATA KEBUN
-if menu == "📊 Data Kebun":
+# 1. MENU: TAMBAH BLOK Mandiri
+if menu == "🌱 Tambah Blok":
+    st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🌱 Tambah Blok Kebun Baru</h3>", unsafe_allow_html=True)
+    with st.form("form_kebun_baru"):
+        nama_blok = st.text_input("Nama Blok Baru", placeholder="Contoh: Blok A")
+        lokasi_kebun = st.text_input("Lokasi Kebun (Kabupaten/Kota)", placeholder="Contoh: Garut / Temanggung")
+        ketinggian_lahan = st.number_input("Ketinggian Lahan Kebun (mdpl)", min_value=0, max_value=3000, value=800)
+        varietas = st.selectbox("Varietas Kopi", ["Arabika", "Robusta"])
+        jenis_pupuk = st.selectbox("Metode Pemupukan Utama", ["Organik (Kompos/Kohe)", "Non-Organik (Kimia/NPK)"])
+        status_musim = st.selectbox("Kondisi Cuaca Saat Ini", ["Musim Kemarau", "Musim Hujan"])
+        tgl_tanam = st.date_input("Tanggal Tanam", datetime.now().date())
+        jml_pohon = st.number_input("Jumlah Pohon (Batang)", min_value=1, value=100)
+        submit_button = st.form_submit_button(label="⚡ Simpan Blok Baru")
+
+    if submit_button and nama_blok:
+        nama_kembar = any(k.get('Blok') == nama_blok for k in st.session_state.kebun_data)
+        if nama_kembar:
+            st.error(f"Nama Blok '{nama_blok}' sudah terdaftar!")
+        else:
+            new_block = {
+                "Blok": nama_blok,
+                "Lokasi": lokasi_kebun,
+                "Ketinggian": int(ketinggian_lahan),
+                "Varietas": varietas,
+                "Jenis_Pupuk": jenis_pupuk,
+                "Tanggal_Tanam": str(tgl_tanam),
+                "Jumlah_Pohon": int(jml_pohon),
+                "Status_Musim": status_musim
+            }
+            st.session_state.kebun_data.append(new_block)
+            kunci_data_ke_link()
+            st.success(f"🎉 Sukses! {nama_blok} berhasil disimpan.")
+            st.rerun()
+
+# 2. MENU: DATA KEBUN
+elif menu == "📊 Data Kebun":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📊 Ringkasan Kebun</h3>", unsafe_allow_html=True)
-    if df_kebun.empty:
-        st.info("📲 Belum ada data kebun terdaftar di kode GitHub.")
+    
+    if not st.session_state.kebun_data:
+        st.info("📲 Belum ada data kebun Anda. Silakan isi data baru di menu '🌱 Tambah Blok'.")
     else:
-        total_pohon = df_kebun['Jumlah_Pohon'].sum()
+        total_pohon = sum(int(k.get('Jumlah_Pohon', 0)) for k in st.session_state.kebun_data)
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
-        st.write("---")
+        st.write("")
         
-        for idx, row in df_kebun.iterrows():
+        for idx, row in enumerate(st.session_state.kebun_data):
             st.markdown(f"""
                 <div class="kartu-kebun">
-                    <h3 style="margin-top:0; color:#4e3629;">📍 Blok: {row['Blok']}</h3>
-                    <p style="margin:3px 0; font-size:14px;">🗺️ <b>Lokasi:</b> {row['Lokasi']} | 🏔️ <b>Ketinggian:</b> {row['Ketinggian']} mdpl</p>
-                    <p style="margin:3px 0; font-size:14px;">🌱 <b>Varietas:</b> Kopi {row['Varietas']} | 🌦️ <b>Cuaca:</b> {row['Status_Musim']}</p>
-                    <p style="margin:3px 0; font-size:14px;">🟫 <b>Sistem Pupuk:</b> {row['Jenis_Pupuk']}</p>
-                    <p style="margin:5px 0 0 0; color:#666; font-size:13px;"><b>Populasi:</b> {row['Jumlah_Pohon']} Pohon | **Tanggal Tanam:** {row['Tanggal_Tanam']}</p>
+                    <h3 style="margin-top:0; color:#4e3629;">📍 Blok: {row.get('Blok')}</h3>
+                    <p style="margin:3px 0; font-size:14px;">🗺️ <b>Lokasi:</b> {row.get('Lokasi')} | 🏔️ <b>Ketinggian:</b> {row.get('Ketinggian')} mdpl</p>
+                    <p style="margin:3px 0; font-size:14px;">🌱 <b>Varietas:</b> Kopi {row.get('Varietas')} | 🌦️ <b>Cuaca:</b> {row.get('Status_Musim')}</p>
+                    <p style="margin:3px 0; font-size:14px;">🟫 <b>Sistem Pupuk:</b> {row.get('Jenis_Pupuk')}</p>
+                    <p style="margin:5px 0 0 0; color:#666; font-size:13px;"><b>Populasi:</b> {row.get('Jumlah_Pohon')} Pohon | <b>Tanggal Tanam:</b> {row.get('Tanggal_Tanam')}</p>
                 </div>
             """, unsafe_allow_html=True)
+            
+            if st.button(f"🗑️ Hapus {row.get('Blok')}", key=f"hapus_{row.get('Blok')}_{idx}"):
+                st.session_state.kebun_data.pop(idx)
+                kunci_data_ke_link()
+                if not st.session_state.kebun_data:
+                    st.query_params.clear()
+                st.rerun()
 
-# 2. MENU: JADWAL KERJA
+# 3. MENU: JADWAL KERJA
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
-    if df_kebun.empty:
-        st.info("📲 Belum ada jadwal tugas.")
+    
+    if not st.session_state.kebun_data:
+        st.info("📲 Belum ada jadwal tugas. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
     else:
-        for idx, row in df_kebun.iterrows():
-            blok_id = row['Blok']
-            tgl = pd.to_datetime(row['Tanggal_Tanam'])
-            musim = row['Status_Musim']
-            h_mdpl = int(row['Ketinggian'])
-            var_kopi = row['Varietas']
+        for row in st.session_state.kebun_data:
+            blok_id = row.get('Blok')
+            musim = row.get('Status_Musim')
+            h_mdpl = int(row.get('Ketinggian', 800))
+            var_kopi = row.get('Varietas')
             
-            st.markdown(f"#### 📍 Blok Kerja: **{blok_id}** ({row['Lokasi']} - {h_mdpl} mdpl)")
+            tgl_str = row.get('Tanggal_Tanam')
+            try:
+                tgl_obj = datetime.strptime(tgl_str, "%Y-%m-%d")
+            except:
+                tgl_obj = datetime.now()
+            
+            st.markdown(f"#### 📍 Blok Kerja: **{blok_id}** ({row.get('Lokasi')} - {h_mdpl} mdpl)")
             
             if var_kopi == "Arabika" and h_mdpl < 1000:
-                st.warning(f"⚠️ **REKOMENDASI ALAM:** Kopi Arabika ditanam di {h_mdpl} mdpl (Terlahu Rendah). Rentan karat daun!")
+                st.warning(f"⚠️ **REKOMENDASI ALAM:** Kopi Arabika ditanam di {h_mdpl} mdpl (Terlalu Rendah). Rentan karat daun!")
             elif var_kopi == "Robusta" and h_mdpl > 900:
                 st.warning(f"⚠️ **REKOMENDASI ALAM:** Kopi Robusta ditanam di {h_mdpl} mdpl (Terlalu Tinggi).")
             else:
                 st.success(f"✅ **KONDISI IDEAL:** Ketinggian lahan {h_mdpl} mdpl cocok untuk varietas Kopi {var_kopi}!")
                 
             tugas_list = []
-            if "Organik" in row['Jenis_Pupuk']:
+            if "Organik" in row.get('Jenis_Pupuk', ''):
                 tugas_list += [("🟫 Aplikasi Pupuk Dasar (Kompos)", 14), ("🟫 Pemupukan Organik Tahap 1", 120)]
             else:
                 tugas_list += [("🧪 Aplikasi Pupuk Kimia Dasar", 30), ("🧪 Pemupukan NPK Vegetatif", 90)]
@@ -127,6 +188,4 @@ elif menu == "📅 Jadwal Kerja":
                 
             tugas_list.sort(key=lambda x: x)
             for nama_tugas, jeda_hari in tugas_list:
-                tgl_target = tgl + timedelta(days=jeda_hari)
-                st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_target.strftime('%d %b %Y')}")
-            st.markdown("---")
+                tgl_target = tgl_obj + timedelta(days=jeda_hari)
