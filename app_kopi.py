@@ -99,54 +99,31 @@ st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>",
 
 st.markdown("""
     <div class="kotak-warning-petani">
-        ⚠️ **PENTING PETANI:** Data tersimpan sementara di HP. Klik tombol **Unduh Cadangan** di bawah secara berkala agar catatan kerja tidak hilang.
+        ⚠️ **PENTING PETANI:** Hubungi inisiator aplikasi untuk menambahkan data kebun Anda ke dalam sistem pusat secara permanen dan abadi.
     </div>
 """, unsafe_allow_html=True)
 
-# --- SISTEM DATA MANDIRI ---
+# --- 🌟 PUSAT KUNCI DATA KEBUN PERMANEN (ANTI-HILANG TOTAL) 🌟 ---
+# Silakan ketik dan masukkan data kebun asli Anda di bawah ini agar tersimpan abadi di server GitHub
+Daftar_Kebun_Abadi = [
+    {"Blok": "Blok Utama", "Varietas": "Arabika", "Jenis_Pupuk": "Organik (Kompos/Kohe)", "Tanggal_Tanam": "2025-01-01", "Jumlah_Pohon": 250, "Status_Musim": "Musim Kemarau"},
+    {"Blok": "Blok B bawah", "Varietas": "Robusta", "Jenis_Pupuk": "Non-Organik (Kimia/NPK)", "Tanggal_Tanam": "2025-06-15", "Jumlah_Pohon": 400, "Status_Musim": "Musim Hujan"}
+]
+
+# Mengunci data ke dalam sistem memori aplikasi
 if 'kebun_data' not in st.session_state:
-    st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
+    st.session_state.kebun_data = pd.DataFrame(Daftar_Kebun_Abadi)
 
 # --- NAVIGASI MENU UTAMA ---
-menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🧮 Kalkulator Pupuk", "🌱 Tambah Blok"], horizontal=True)
+menu = st.radio("Pilih Menu:", ["📊 Data Kebun", "📅 Jadwal Kerja", "🧮 Kalkulator Pupuk"], horizontal=True)
 st.write("---")
 
-# 1. MENU: TAMBAH BLOK
-if menu == "🌱 Tambah Blok":
-    st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🌱 Tambah Blok Kebun Baru</h3>", unsafe_allow_html=True)
-    with st.form("form_kebun_baru"):
-        nama_blok = st.text_input("Nama Blok Baru", placeholder="Contoh: Blok A")
-        varietas = st.selectbox("Varietas Kopi", ["Arabika", "Robusta"])
-        jenis_pupuk = st.selectbox("Metode Pemupukan Utama", ["Organik (Kompos/Kohe)", "Non-Organik (Kimia/NPK)"])
-        status_musim = st.selectbox("Kondisi Cuaca Saat Ini", ["Musim Kemarau", "Musim Hujan"])
-        tgl_tanam = st.date_input("Tanggal Tanam", datetime.now().date())
-        jml_pohon = st.number_input("Jumlah Pohon (Batang)", min_value=1, value=100)
-        submit_button = st.form_submit_button(label="⚡ Simpan Blok Baru")
-
-    if submit_button and nama_blok:
-        if not st.session_state.kebun_data.empty and nama_blok in st.session_state.kebun_data['Blok'].values:
-            st.error(f"Nama Blok '{nama_blok}' sudah terdaftar!")
-        else:
-            new_row = pd.DataFrame([[nama_blok, varietas, jenis_pupuk, str(tgl_tanam), jml_pohon, status_musim]], 
-                                    columns=['Blok', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
-            st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_row], ignore_index=True)
-            st.success(f"🎉 Sukses menambahkan {nama_blok}!")
-            st.rerun()
-
-# 2. MENU: TAMPILAN DATA KEBUN
-elif menu == "📊 Data Kebun":
+# 1. MENU: TAMPILAN DATA KEBUN
+if menu == "📊 Data Kebun":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📊 Ringkasan Kebun</h3>", unsafe_allow_html=True)
     
-    # Tombol Pembantu Petani agar langsung terisi data contoh
     if st.session_state.kebun_data.empty:
-        if st.button("💡 Isi Data Contoh Otomatis (Uji Coba Aplikasi)"):
-            st.session_state.kebun_data = pd.DataFrame([
-                {"Blok": "Blok Utama (Lereng)", "Varietas": "Arabika", "Jenis_Pupuk": "Organik (Kompos/Kohe)", "Tanggal_Tanam": "2025-01-01", "Jumlah_Pohon": 250, "Status_Musim": "Musim Kemarau"},
-                {"Blok": "Blok B (Bawah)", "Varietas": "Robusta", "Jenis_Pupuk": "Non-Organik (Kimia/NPK)", "Tanggal_Tanam": "2025-06-15", "Jumlah_Pohon": 400, "Status_Musim": "Musim Hujan"}
-            ])
-            st.rerun()
-            
-        st.info("📲 Belum ada data kebun. Silakan tambah data di menu '🌱 Tambah Blok' atau klik tombol data contoh di atas.")
+        st.info("📲 Belum ada data kebun terdaftar di kode GitHub.")
     else:
         total_pohon = st.session_state.kebun_data['Jumlah_Pohon'].sum()
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
@@ -169,17 +146,13 @@ elif menu == "📊 Data Kebun":
                     <p style="margin:2px 0; font-size:12px; color:#666;"><b>Populasi:</b> {row['Jumlah_Pohon']} Pohon | **Tanam:** {row['Tanggal_Tanam']}</p>
                 </div>
             """, unsafe_allow_html=True)
-            
-            if st.button(f"🗑️ Hapus {row['Blok']}", key=f"hapus_{row['Blok']}_{idx}"):
-                st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
-                st.rerun()
 
-# 3. MENU: TAMPILAN JADWAL
+# 2. MENU: TAMPILAN JADWAL
 elif menu == "📅 Jadwal Kerja":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>📅 Daftar Tugas Pemeliharaan</h3>", unsafe_allow_html=True)
     
     if st.session_state.kebun_data.empty:
-        st.info("Belum ada jadwal. Tambahkan data kebun terlebih dahulu.")
+        st.info("Belum ada jadwal.")
     else:
         for idx, row in st.session_state.kebun_data.iterrows():
             blok_id = row['Blok']
@@ -212,7 +185,7 @@ elif menu == "📅 Jadwal Kerja":
                 st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_indo}")
             st.markdown("---")
 
-# 4. MENU: TAMPILAN KALKULATOR (100% BEBAS BUG DAN DATA TIDAK AKAN RESET)
+# 3. MENU: TAMPILAN KALKULATOR
 elif menu == "🧮 Kalkulator Pupuk":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🧮 Kalkulator Kebutuhan Pupuk</h3>", unsafe_allow_html=True)
     
@@ -223,4 +196,43 @@ elif menu == "🧮 Kalkulator Pupuk":
         df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
         
         if not df_filter.empty:
-            # --- 🌟 PENERAPAN KUNCI DATA AMAN SINTAKS .iloc[0] 🌟 ---
+            # Menggunakan ekstraksi data baris pertama agar stabil 100%
+            jumlah_pohon = int(df_filter['Jumlah_Pohon'].values[0])
+            sistem_pupuk = str(df_filter['Jenis_Pupuk'].values[0])
+            
+            st.info(f"**Blok Terpilih:** {pilihan_blok} | **Populasi:** {jumlah_pohon} Pohon")
+            
+            tonase_pesanan = 0.0
+            satuan = "Kg"
+            jenis_barang = ""
+            
+            if "Organik" in sistem_pupuk:
+                tonase_pesanan = jumlah_pohon * 5.0
+                st.metric(label="Total Pupuk Kompos/Kohe Dibutuhkan", value=f"{tonase_pesanan:,.1f} Kg")
+                jenis_barang = "Pupuk Organik Kompos"
+            else:
+                tonase_pesanan = (jumlah_pohon * 100) / 1000
+                st.metric(label="Total Pupuk NPK Kimia Dibutuhkan", value=f"{tonase_pesanan:,.1f} Kg")
+                jenis_barang = "Pupuk Kimia NPK"
+            
+            # --- AFILIASI DROPDOWN WILAYAH TERDEKAT ---
+            st.write("---")
+            st.markdown("<h4 style='color: #1e3f20; margin-top:0;'>🛒 Pesan Pupuk Lewat Agen Terdekat</h4>", unsafe_allow_html=True)
+            
+            wilayah_petani = st.selectbox("Pilih Lokasi Wilayah Kebun Anda:", [
+                "Pilih Wilayah...",
+                "Aceh Tengah (Gayo)",
+                "Bandung Barat (Lembang/Pangalengan)",
+                "Temanggung (Jawa Tengah)",
+                "Kintamani (Bali)"
+            ])
+            
+            kontak_toko = {
+                "Aceh Tengah (Gayo)": {"nama": "Toko Tani Makmur Gayo", "wa": "628123456789"},
+                "Bandung Barat (Lembang/Pangalengan)": {"nama": "CV Kopi Subur Mandiri", "wa": "628555444333"},
+                "Temanggung (Jawa Tengah)": {"nama": "Agen Pupuk Subur Temanggung", "wa": "628987654321"},
+                "Kintamani (Bali)": {"nama": "Kios Tani Amadan Bali", "wa": "628111222333"}
+            }
+            
+            if wilayah_petani != "Pilih Wilayah...":
+                toko_terpilih = kontak_toko[wilayah_petani]
