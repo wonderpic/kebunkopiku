@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta
 
 # Konfigurasi Tampilan Utama
-st.set_page_config(page_title="KopiPlan Premium", layout="centered")
+st.set_page_config(page_title="Talaga Hangsa KopiPlanPro", layout="centered")
 
 # --- KODE DESAIN TEMA (KUSTOMISASI WARNA & BACKGROUND) ---
 st.markdown("""
@@ -14,13 +14,25 @@ st.markdown("""
         background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%);
     }
     
-    /* Mengubah Warna Teks Judul Utama */
-    h1 {
+    /* Mengubah Warna Teks Judul Utama (Center) */
+    .judul-utama {
         color: #1e3f20 !important;
         font-family: 'Helvetica Neue', sans-serif;
         font-weight: 800;
+        text-align: center;
         text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-        margin-top: 10px !important;
+        margin-top: 15px !important;
+        margin-bottom: 5px !important;
+        font-size: 28px;
+    }
+    
+    .sub-judul {
+        color: #4a6b4c; 
+        font-weight: 500; 
+        text-align: center; 
+        margin-top: -5px;
+        margin-bottom: 25px;
+        font-size: 14px;
     }
     
     /* Desain Kotak Kartu Informasi */
@@ -58,19 +70,22 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- BAGIAN LOGO PENGINISIASI (Spesifik Membaca "Asset 3.png") ---
+# --- BAGIAN LOGO PENGINISIASI (DISETTING CENTER & TAJAM) ---
 NAMA_LOGO = "Asset 3.png"
 
 if os.path.exists(NAMA_LOGO):
-    # Menampilkan logo Anda di tengah secara proporsional dengan lebar 120 pixel
-    st.image(NAMA_LOGO, width=120, use_container_width=False)
+    # Menggunakan HTML khusus agar gambar tetap tajam (image-rendering auto) dan posisi center mutlak
+    st.markdown(f"""
+        <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 10px;">
+            <img src="app/static/{NAMA_LOGO}" style="width: 130px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
+        </div>
+    """, unsafe_allow_html=True)
 else:
-    # Teks pengingat jika file belum diunggah atau nama file di GitHub tidak sama persis
-    st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' belum ditemukan di GitHub ]</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' tidak ditemukan ]</p>", unsafe_allow_html=True)
 
-# --- JUDUL APLIKASI ---
-st.markdown("<h1 style='text-align: center;'>☕ KopiPlan Pro</h1>", unsafe_allow_html=True)
-st.markdown("<p style='color: #4a6b4c; font-weight: 500; text-align: center; margin-top: -15px;'>Asisten Digital Inisiasi Oleh Anda</p>", unsafe_allow_html=True)
+# --- JUDUL APLIKASI BARU (CENTER DI BAWAH LOGO) ---
+st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-judul'>Asisten Digital Manajemen Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
 st.write("")
 
 # --- SISTEM PENYIMPANAN DATA MANDIRI ---
