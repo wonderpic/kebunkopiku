@@ -1,13 +1,25 @@
 import streamlit as st
 import pandas as pd
 import os
+import base64
 from datetime import datetime, timedelta
-from PIL import Image
 
-# Konfigurasi Tampilan Utama
+# Konfigurasi Tampilan Utama Halaman HP
 st.set_page_config(page_title="Talaga Hangsa KopiPlanPro", layout="centered")
 
-# --- KODE DESAIN TEMA (KUSTOMISASI WARNA & BACKGROUND) ---
+# --- SISTEM PROSES GAMBAR BASE64 (MENGUNCI KETAJAMAN & CENTER MUTLAK) ---
+def konversi_gambar_ke_html(jalur_gambar):
+    with open(jalur_gambar, "rb") as file_gambar:
+        data_binner = file_gambar.read()
+        format_base64 = base64.b64encode(data_binner).decode()
+    # HTML murni untuk mengunci pixel agar jernih tajam (anti-alias / crisp-edges)
+    return f"""
+    <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: -10px;">
+        <img src="data:image/png;base64,{format_base64}" style="width: 140px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;">
+    </div>
+    """
+
+# --- KODE DESAIN TEMA LUXURY (KUSTOMISASI WARNA & BACKGROUND) ---
 st.markdown("""
     <style>
     /* Latar Belakang Aplikasi Bernuansa Alam */
@@ -15,7 +27,7 @@ st.markdown("""
         background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%);
     }
     
-    /* Mengubah Warna Teks Judul Utama (Center) */
+    /* Mengubah Warna Teks Judul Utama (Center Mutlak di Bawah Logo) */
     .judul-utama {
         color: #1e3f20 !important;
         font-family: 'Helvetica Neue', sans-serif;
@@ -34,13 +46,6 @@ st.markdown("""
         margin-top: -5px;
         margin-bottom: 25px;
         font-size: 14px;
-    }
-    
-    /* Centering bingkai gambar bawaan Streamlit */
-    [data-testid="stImage"] {
-        display: flex;
-        justify-content: center;
-        margin: 0 auto;
     }
     
     /* Desain Kotak Kartu Informasi */
@@ -78,22 +83,19 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- BAGIAN LOGO PENGINISIASI (DISETTING CENTER & TAJAM TANPA TRAILING HTML PATH) ---
+# --- EKSEKUSI PENAMPILAN LOGO (GARANSI CENTER & TAJAM) ---
 NAMA_LOGO = "logo.png"
 
-# Pengecekan file secara langsung pada root folder repositori
 if os.path.exists(NAMA_LOGO):
     try:
-        # Membuka gambar asli dengan Pillow
-        gambar_logo = Image.open(NAMA_LOGO)
-        # Menampilkan gambar secara center mutlak dengan layout Streamlit asli (bebas dari error link)
-        st.image(gambar_logo, width=140)
+        html_logo = konversi_gambar_ke_html(NAMA_LOGO)
+        st.markdown(html_logo, unsafe_allow_html=True)
     except:
-        st.markdown("<p style='text-align: center; color: #d9534f; font-style: italic; font-size: 12px;'>[ Gagal memproses file gambar ]</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #d9534f; font-style: italic; font-size: 12px;'>[ Gagal memproses ketajaman logo ]</p>", unsafe_allow_html=True)
 else:
     st.markdown(f"<p style='text-align: center; color: #888; font-style: italic; font-size: 12px;'>[ File '{NAMA_LOGO}' tidak ditemukan di GitHub ]</p>", unsafe_allow_html=True)
 
-# --- JUDUL APLIKASI BARU (CENTER DI BAWAH LOGO) ---
+# --- JUDUL BRANDING BARU (POSISI CENTER DI BAWAH LOGO) ---
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-judul'>Asisten Digital Manajemen Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
 st.write("")
@@ -210,7 +212,3 @@ elif menu == "🧮 Kalkulator Pupuk":
             
             if "Organik" in sistem_pupuk:
                 total_kebutuhan = jumlah_pohon * 5.0
-                st.metric(label="Total Pupuk Kompos/Kohe yang Diperlukan", value=f"{total_kebutuhan:,.1f} Kg")
-                st.caption("💡 Dosis standar: 5 Kg pupuk organik per pohon.")
-            else:
-                total_kebutuhan_kg = (jumlah_pohon * 100) / 1000
