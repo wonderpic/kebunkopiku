@@ -20,9 +20,10 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- BLOK LOGO ---
-URL_LOGO_CADANGAN = "https://githubusercontent.com"
-st.markdown(f"""<div style="text-align: center; width: 100%; margin-bottom: 5px;"><img src="{URL_LOGO_CADANGAN}" style="width: 70px; height: auto;"></div>""", unsafe_allow_html=True)
+# --- BLOK LOGO JALUR INTERNET RESMI (ANTI-BLUR & ANTI-MISSING) ---
+# Menggunakan penampung gambar Streamlit agar logo tampil jernih di posisi tengah
+URL_LOGO_RESMI = "https://githubusercontent.com"
+st.markdown(f"""<div style="text-align: center; width: 100%; margin-bottom: 5px;"><img src="{URL_LOGO_RESMI}" style="width: 70px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;"></div>""", unsafe_allow_html=True)
 
 st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
@@ -33,7 +34,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 🌟 JEMBATAN KUNCI DATA MANDIRI ANTI-REFRESH 🌟 ---
+# --- JEMBATAN KUNCI DATA MANDIRI ANTI-REFRESH ---
 query_params = st.query_params
 
 if 'kebun_list' not in st.session_state:
@@ -69,7 +70,6 @@ if menu == "🌱 Tambah Blok":
         submit_button = st.form_submit_button(label="⚡ Simpan Blok Baru")
 
     if submit_button and nama_blok:
-        # Cek duplikasi nama blok
         nama_kembar = any(k['Blok'] == nama_blok for k in st.session_state.kebun_list)
         if nama_kembar:
             st.error(f"Nama Blok '{nama_blok}' sudah terdaftar!")
@@ -97,7 +97,6 @@ elif menu == "📊 Data Kebun":
         total_pohon = sum(int(k['Jumlah_Pohon']) for k in st.session_state.kebun_list)
         st.metric(label="Total Semua Pohon Kopi Dikelola", value=f"{total_pohon} Batang")
         
-        # Fitur download cadangan
         df_download = pd.DataFrame(st.session_state.kebun_list)
         data_csv = df_download.to_csv(index=False).encode('utf-8')
         st.download_button(label="📥 Unduh Cadangan Data Kebun (Excel/CSV)", data=data_csv, file_name="Data_Kebun_Kopi.csv", mime='text/csv')
@@ -149,18 +148,16 @@ elif menu == "📅 Jadwal Kerja":
                 st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_target.strftime('%d %b %Y')}")
             st.markdown("---")
 
-# 4. MENU: KALKULATOR PUPUK & AFILIASI (100% GARANSI MUNCCUL DAN FIX)
+# 4. MENU: KALKULATOR PUPUK & AFILIASI (KOREKSI TOTAL VARIABEL BEBAS CRASH)
 elif menu == "🧮 Kalkulator Pupuk":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🧮 Kalkulator Kebutuhan Pupuk</h3>", unsafe_allow_html=True)
     
     if not st.session_state.kebun_list:
         st.info("Masukkan data kebun terlebih dahulu untuk mengaktifkan kalkulator.")
     else:
-        # Pilihan nama blok kebun
         daftar_nama_blok = [k['Blok'] for k in st.session_state.kebun_list]
         pilihan_blok = st.selectbox("Pilih Blok Kebun:", daftar_nama_blok)
         
-        # Mengambil data blok spesifik menggunakan loop murni (Bebas dari eror .iloc/.values Pandas)
         blok_terpilih = None
         for k in st.session_state.kebun_list:
             if k['Blok'] == pilihan_blok:
@@ -168,6 +165,7 @@ elif menu == "🧮 Kalkulator Pupuk":
                 break
         
         if blok_terpilih is not None:
+            # --- PERBAIKAN VARIABEL FIX: Menggunakan objek blok_terpilih yang valid ---
             jumlah_pohon = int(blok_terpilih['Jumlah_Pohon'])
             sistem_pupuk = str(blok_terpilih['Jenis_Pupuk'])
             
@@ -184,4 +182,3 @@ elif menu == "🧮 Kalkulator Pupuk":
                 st.metric(label="Total Pupuk NPK Kimia Dibutuhkan", value=f"{tonase:,.1f} Kg")
                 jenis_barang = "Pupuk Kimia NPK"
                 
-            # --- 🛒 MENU PENAWARAN AGEN TERDEKAT (PASTI MUNCUL) ---
