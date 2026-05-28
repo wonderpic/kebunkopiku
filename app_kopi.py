@@ -12,59 +12,42 @@ def konversi_gambar_ke_html(jalur_gambar):
     with open(jalur_gambar, "rb") as file_gambar:
         data_binner = file_gambar.read()
         format_base64 = base64.b64encode(data_binner).decode()
-    return f"""
-    <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-top: -30px; margin-bottom: -25px;">
-        <img src="data:image/png;base64,{format_base64}" style="width: 110px; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; object-fit: contain;">
-    </div>
-    """
+    return f"data:image/png;base64,{format_base64}"
 
-# --- KODE DESAIN TEMA LUXURY (DENGAN PENYUSUTAN SPACE LAYOUT) ---
+# --- AMBIL DATA LOGO JIKA ADA ---
+NAMA_LOGO = "logo.png"
+html_src_logo = ""
+if os.path.exists(NAMA_LOGO):
+    try:
+        html_src_logo = konversi_gambar_ke_html(NAMA_LOGO)
+    except:
+        pass
+
+# --- KODE DESAIN TEMA (MEMAKSA PENYUSUTAN TOTAL MARGIN & TEKS) ---
 st.markdown("""
     <style>
-    /* Mengurangi margin bawaan paling atas dari server Streamlit */
+    /* 1. Paksa hapus margin putih paling atas dari server Streamlit */
+    .stAppHeader {
+        display: none !important;
+    }
     .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 1rem !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        max-width: 100% !important;
+    }
+    div[data-testid="stDecoration"] {
+        display: none !important;
+    }
+    div[data-testid="stVerticalBlock"] > div {
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
     }
     
     .stApp {
         background: linear-gradient(135deg, #f4f7f4 0%, #e6ebe6 100%);
     }
     
-    /* Mengubah Warna Teks Judul Utama (Diperketat) */
-    .judul-utama {
-        color: #1e3f20 !important;
-        font-family: 'Helvetica Neue', sans-serif;
-        font-weight: 800;
-        text-align: center;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-        margin-top: 5px !important;
-        margin-bottom: 0px !important;
-        font-size: 24px;
-    }
-    
-    .sub-judul {
-        color: #4a6b4c; 
-        font-weight: 500; 
-        text-align: center; 
-        margin-top: 0px;
-        margin-bottom: 15px;
-        font-size: 13px;
-    }
-    
-    /* Custom Teks Peringatan agar Tipis dan Hemat Tempat */
-    .peringatan-petani {
-        background-color: #fff3cd;
-        color: #856404;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 11px;
-        line-height: 1.4;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-    }
-    
-    /* Desain Kotak Kartu Informasi */
+    /* 2. Desain Kotak Kartu Informasi */
     .block-container .element-container div.stAlert {
         border-radius: 12px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
@@ -99,25 +82,23 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- EKSEKUSI PENAMPILAN LOGO ---
-NAMA_LOGO = "logo.png"
-if os.path.exists(NAMA_LOGO):
-    try:
-        html_logo = konversi_gambar_ke_html(NAMA_LOGO)
-        st.markdown(html_logo, unsafe_allow_html=True)
-    except:
-        pass
+# --- 🛠️ BLOK HEADER KUSTOM MANDIRI (MENGUNCI MARGIN & TEKS PERINGATAN TIPIS) ---
+# Di sini kita menyatukan Logo, Judul, dan Teks Peringatan Kecil dalam satu baris HTML terpadu agar hemat tempat
+html_logo_tag = f'<img src="{html_src_logo}" style="width: 90px; height: auto; margin-bottom: 5px; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">' if html_src_logo else ''
 
-# --- JUDUL BRANDING ---
-st.markdown("<div class='judul-utama'>Talaga Hangsa KopiPlanPro</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-judul'>Asisten Digital Manajemen Perawatan Kebun Kopi</div>", unsafe_allow_html=True)
-
-# --- ⚠️ HASIL KOREKSI: TEKS PERINGATAN TIPIS & HEMAT TEMPAT ---
-st.markdown("""
-    <div class="peringatan-petani">
-        <b>⚠️ PENTING UNTUK PETANI:</b> Data tersimpan di HP ini. <b>JANGAN</b> hapus riwayat internet (Cache/Cookies) HP agar data tidak hilang. Gunakan tombol <b>📥 Unduh Cadangan</b> di menu Data Kebun secara berkala.
+st.markdown(f"""
+    <div style="text-align: center; width: 100%; margin-top: 0px; padding-top: 0px;">
+        {html_logo_tag}
+        <h1 style="color: #1e3f20 !important; font-family: 'Helvetica Neue', sans-serif; font-weight: 800; text-align: center; margin: 2px 0 !important; font-size: 22px; padding: 0;">Talaga Hangsa KopiPlanPro</h1>
+        <p style="color: #4a6b4c; font-weight: 500; text-align: center; margin: 0 0 10px 0 !important; font-size: 12px; padding: 0;">Asisten Digital Manajemen Perawatan Kebun Kopi</p>
+        
+        <!-- HASIL KOREKSI: Kotak Peringatan Sangat Tipis, Hemat Tempat, Huruf Kecil -->
+        <div style="background-color: #fff3cd; color: #856404; padding: 6px 10px; border-radius: 6px; font-size: 10.5px; line-height: 1.3; text-align: left; margin-bottom: 12px; border: 1px solid #ffeeba;">
+            <b>⚠️ PENTING PETANI:</b> Data tersimpan di HP ini. <b>JANGAN</b> hapus riwayat internet (Cache/Cookies) HP agar data tidak hilang. Unduh cadangan berkala di menu Data Kebun.
+        </div>
     </div>
 """, unsafe_allow_html=True)
+
 
 # --- SISTEM PENYIMPANAN DATA MANDIRI ---
 if 'kebun_data' not in st.session_state:
