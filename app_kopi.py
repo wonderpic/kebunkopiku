@@ -106,7 +106,6 @@ elif menu == "📊 Data Kebun":
                 </div>
             """, unsafe_allow_html=True)
             
-            # TOMBOL HAPUS SEKARANG BERFUNGSI 100% KARENA MENGGUNAKAN STATE DINAMIS
             if st.button(f"🗑️ Hapus {row['Blok']}", key=f"hapus_{row['Blok']}_{idx}"):
                 st.session_state.kebun_data = st.session_state.kebun_data.drop(idx).reset_index(drop=True)
                 st.success(f"Blok {row['Blok']} telah berhasil dihapus!")
@@ -142,7 +141,7 @@ elif menu == "📅 Jadwal Kerja":
                 st.error(f"⚠️ **TUGAS** | **{nama_tugas}** | 📆 Target: {tgl_target.strftime('%d %b %Y')}")
             st.markdown("---")
 
-# 4. MENU: KALKULATOR PUPUK & AFILIASI
+# 4. MENU: KALKULATOR PUPUK & AFILIASI (KOREKSI SINTAKS TOTAL)
 elif menu == "🧮 Kalkulator Pupuk":
     st.markdown("<h3 style='color: #1e3f20; margin-top:0;'>🧮 Kalkulator Kebutuhan Pupuk</h3>", unsafe_allow_html=True)
     
@@ -153,7 +152,7 @@ elif menu == "🧮 Kalkulator Pupuk":
         df_filter = st.session_state.kebun_data[st.session_state.kebun_data['Blok'] == pilihan_blok]
         
         if not df_filter.empty:
-            # Mengambil nilai baris pertama menggunakan konversi .values murni agar aman dari crash
+            # --- 🌟 KOREKSI SINTAKS .values[0] (GARANSI DROPDOWN JALAN) 🌟 ---
             jumlah_pohon = int(df_filter['Jumlah_Pohon'].values[0])
             sistem_pupuk = str(df_filter['Jenis_Pupuk'].values[0])
             st.info(f"**Blok Terpilih:** {pilihan_blok} | **Populasi:** {jumlah_pohon} Pohon")
@@ -167,6 +166,6 @@ elif menu == "🧮 Kalkulator Pupuk":
                 st.metric(label="Total Pupuk NPK Kimia Dibutuhkan", value=f"{tonase:,.1f} Kg")
                 jenis_barang = "Pupuk Kimia NPK"
             
-            # --- 🛒 MENU PENAWARAN AFILIASI WA (AKTIF SINKRON) ---
+            # --- 🛒 MENU PENAWARAN AFILIASI WA ---
             st.write("---")
             st.markdown("<h4 style='color: #1e3f20; margin-top:0;'>🛒 Pesan Pupuk Lewat Agen Terdekat</h4>", unsafe_allow_html=True)
