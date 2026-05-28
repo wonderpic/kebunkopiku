@@ -47,17 +47,16 @@ st.markdown("<div class='sub-judul'>Asisten Digital Perawatan Kebun Kopi</div>",
 
 st.markdown("""
     <div class="kotak-warning-petani">
-        ⚠️ **PENTING UNTUK PETANI:** Data kebun Anda dikunci langsung pada link browser HP Anda agar tidak hilang saat di-refresh. 
+        ⚠️ **PENTING UNTUK PETANI:** Data kebun dikunci pada link browser HP Anda agar permanen abadi. Jangan bersihkan riwayat internet HP agar data tidak terhapus.
     </div>
 """, unsafe_allow_html=True)
 
-# --- 🌟 JEMBATAN KUNCI LINK BRIDGING (ANTI-HILANG REFRESH) 🌟 ---
+# --- 🌟 REKOMENDASI FIX: SINKRONISASI TANGGAL MEMORI LINK 🌟 ---
 query_params = st.query_params
 
 if 'kebun_data' not in st.session_state:
     if 'kebun_backup' in query_params:
         try:
-            # Memulihkan data otomatis dari enkripsi link browser saat direfresh
             raw_json = base64.b64decode(query_params['kebun_backup']).decode('utf-8')
             st.session_state.kebun_data = pd.DataFrame(json.loads(raw_json))
         except:
@@ -65,7 +64,6 @@ if 'kebun_data' not in st.session_state:
     else:
         st.session_state.kebun_data = pd.DataFrame(columns=['Blok', 'Lokasi', 'Ketinggian', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
 
-# Fungsi otomatis menyelipkan data ke link browser HP
 def kunci_data_ke_link():
     if not st.session_state.kebun_data.empty:
         json_str = st.session_state.kebun_data.to_json(orient='records')
@@ -97,7 +95,7 @@ if menu == "🌱 Tambah Blok":
             new_row = pd.DataFrame([[nama_blok, lokasi_kebun, ketinggian_lahan, varietas, jenis_pupuk, str(tgl_tanam), jml_pohon, status_musim]], 
                                     columns=['Blok', 'Lokasi', 'Ketinggian', 'Varietas', 'Jenis_Pupuk', 'Tanggal_Tanam', 'Jumlah_Pohon', 'Status_Musim'])
             st.session_state.kebun_data = pd.concat([st.session_state.kebun_data, new_row], ignore_index=True)
-            kunci_data_ke_link() # Kunci ke link internet
+            kunci_data_ke_link()
             st.success(f"🎉 Sukses! {nama_blok} berhasil disimpan.")
             st.rerun()
 
@@ -137,8 +135,9 @@ elif menu == "📅 Jadwal Kerja":
     if st.session_state.kebun_data.empty:
         st.info("Belum ada jadwal. Tambahkan data kebun terlebih dahulu di menu '🌱 Tambah Blok'.")
     else:
-        for idx, row in st.session_state.kebun_data.iterrows():
+        for idx, row in st.session_data.kebun_data.iterrows():
             blok_id = row['Blok']
+            # Konversi paksa string tanggal dari link browser menjadi format waktu Python murni
             tgl = pd.to_datetime(row['Tanggal_Tanam'])
             musim = row['Status_Musim']
             h_mdpl = int(row['Ketinggian'])
