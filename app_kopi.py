@@ -79,7 +79,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- BAGIAN LOGO PENGINISIASI (DISETTING CENTER & TAJAM TANPA TRAILING HTML PATH) ---
-NAMA_LOGO = "Asset 3.png"
+NAMA_LOGO = "logo.png"
 
 # Pengecekan file secara langsung pada root folder repositori
 if os.path.exists(NAMA_LOGO):
